@@ -1,0 +1,1826 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bilan kiné</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Bilan kiné">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#F5F8F7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F1719" media="(prefers-color-scheme: dark)">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&display=swap" rel="stylesheet">
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --paper:#F5F8F7;--panel:#FFFFFF;--ink:#16252A;--muted:#5A6B70;--line:#D2DDD9;
+  --mist:#E6EFEB;--accent:#2E6B5E;--accent-ink:#FFFFFF;--accent-soft:#D6E7E1;
+  --pain:#C2412F;--pares:#4F55C2;--raid:#A96C12;--body:#E8EFEC;--body-stroke:#A6BAB3;
+  --warn-bg:#FBE8E4;
+  --display:"Bricolage Grotesque","Avenir Next","Segoe UI",system-ui,sans-serif;
+  --text:"Atkinson Hyperlegible","Helvetica Neue",Arial,system-ui,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#0F1719;--panel:#162124;--ink:#E3ECE9;--muted:#93A6A1;--line:#2B3B3E;
+    --mist:#1C2A2D;--accent:#72BBA8;--accent-ink:#0F1719;--accent-soft:#213F39;
+    --pain:#F07462;--pares:#9599F2;--raid:#E2A54A;--body:#22302F;--body-stroke:#4B625D;
+    --warn-bg:#46231E;color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0F1719;--panel:#162124;--ink:#E3ECE9;--muted:#93A6A1;--line:#2B3B3E;
+  --mist:#1C2A2D;--accent:#72BBA8;--accent-ink:#0F1719;--accent-soft:#213F39;
+  --pain:#F07462;--pares:#9599F2;--raid:#E2A54A;--body:#22302F;--body-stroke:#4B625D;
+  --warn-bg:#46231E;color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+html,body{height:100%;margin:0}
+body{background:var(--paper);color:var(--ink);font-family:var(--text);font-size:16px;line-height:1.45;-webkit-text-size-adjust:100%}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--paper)}
+h1,h2,h3{font-family:var(--display);font-weight:700;margin:0;letter-spacing:-.01em}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.app{display:grid;grid-template-columns:300px 1fr;height:100%}
+.side{display:flex;flex-direction:column;min-height:0;background:var(--panel);border-right:1px solid var(--line)}
+.side-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 18px 10px}
+.brand{font-family:var(--display);font-weight:700;font-size:23px;display:flex;align-items:center;gap:8px}
+.brand svg{width:26px;height:26px}
+.search{padding:4px 18px 12px}
+.plist{flex:1;overflow:auto;padding:0 10px 10px}
+.pitem{display:block;width:100%;text-align:left;background:none;border:0;border-radius:12px;padding:12px 12px;cursor:pointer;min-height:56px}
+.pitem:hover{background:var(--mist)}
+.pitem.on{background:var(--accent-soft)}
+.pn{display:block;font-weight:700}
+.pm{display:block;font-size:14px;color:var(--muted)}
+.sfoot{border-top:1px solid var(--line);padding:12px 18px 14px;font-size:14px;color:var(--muted)}
+.sfoot p{margin:0 0 10px}
+.status{margin:8px 0 0!important;min-height:1.2em}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+.main{overflow:auto;min-height:0;-webkit-overflow-scrolling:touch}
+.topbar{position:sticky;top:0;z-index:5;background:var(--paper);border-bottom:1px solid var(--line);padding:12px 24px 0}
+.topline{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding-bottom:10px}
+.topline h1{font-size:24px;flex:1;min-width:180px}
+.topline .who{display:block;font-family:var(--text);font-weight:400;font-size:15px;color:var(--muted)}
+.tabs{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{background:none;border:0;border-bottom:3px solid transparent;padding:10px 14px 9px;cursor:pointer;color:var(--muted);font-weight:700;white-space:nowrap;min-height:44px}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.content{padding:24px;max-width:980px}
+.content h2{font-size:20px;margin:28px 0 12px}
+.content h2:first-child{margin-top:0}
+.hint{color:var(--muted);font-size:15px;margin:-4px 0 14px;max-width:62ch}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--line);background:var(--panel);cursor:pointer;font-weight:700;text-decoration:none}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.sm{min-height:40px;padding:0 12px;font-size:15px}
+.btn.danger{color:var(--pain)}
+.btn.back{display:none}
+.icon-btn{width:40px;height:40px;border-radius:10px;border:1px solid transparent;background:none;cursor:pointer;color:var(--muted);font-size:22px;line-height:1}
+.icon-btn:hover{border-color:var(--line);color:var(--pain)}
+
+input[type=text],input[type=password],input[type=search],input[type=date],input[type=tel],input[type=number],input:not([type]),select,textarea{
+  width:100%;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-height:44px;font-size:16px}
+textarea{resize:vertical;min-height:84px}
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px 20px}
+.fields .wide{grid-column:1/-1}
+.f span{display:block;font-size:14px;color:var(--muted);margin-bottom:4px;font-weight:700}
+
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.chip{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:0 14px;min-height:40px;cursor:pointer;font-size:15px}
+.chip:hover{border-color:var(--accent);background:var(--accent-soft)}
+.chip.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;min-width:520px}
+th{font-size:13px;color:var(--muted);text-align:left;padding:10px 10px;border-bottom:1px solid var(--line);font-weight:700}
+td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.num input{width:84px;text-align:center}
+td.num select{width:84px}
+td small{display:block;font-size:12.5px;color:var(--muted);margin-top:3px;text-align:center}
+td.low input{background:var(--warn-bg);border-color:var(--pain)}
+.mv b{display:block}
+.mv span{color:var(--muted);font-size:15px}
+.empty{color:var(--muted);padding:14px 4px}
+
+.eva{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px 28px;margin-bottom:8px}
+.eva-box{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.eva-top{display:flex;align-items:baseline;justify-content:space-between}
+.eva-top span{font-weight:700;color:var(--muted);font-size:14px}
+.eva-val{font-family:var(--display);font-size:40px;font-weight:700;line-height:1}
+.eva-val small{font-size:18px;color:var(--muted)}
+input[type=range]{width:100%;accent-color:var(--accent);height:36px}
+.linkbtn{background:none;border:0;color:var(--muted);text-decoration:underline;cursor:pointer;padding:4px 0;font-size:14px}
+
+.bodyzone{display:grid;grid-template-columns:1fr 1fr;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;max-width:560px}
+.figwrap{text-align:center}
+.figwrap p{margin:4px 0 0;font-weight:700;color:var(--muted);font-size:14px}
+svg.fig{width:100%;max-width:230px;height:auto;touch-action:manipulation;cursor:crosshair;display:block;margin:0 auto}
+.sil *{fill:var(--body);stroke:var(--body-stroke);stroke-width:1.5}
+.spine,.face{fill:none;stroke:var(--body-stroke);stroke-width:1.5;stroke-dasharray:4 4}
+.face{stroke-dasharray:none}
+.side-l{font-size:13px;fill:var(--muted);font-family:var(--text);font-weight:700}
+.mk{stroke:var(--panel);stroke-width:2.5;cursor:pointer;opacity:.9}
+.k-douleur{fill:var(--pain)}.k-paresthesie{fill:var(--pares)}.k-raideur{fill:var(--raid)}
+.dot{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:6px;vertical-align:-1px}
+.tools{margin:0 0 12px}
+
+.pv{padding:28px 24px;max-width:860px}
+.pv h1{font-size:34px}
+.pv .meta{color:var(--muted);margin:6px 0 18px}
+.blist{display:grid;gap:10px;margin-top:12px}
+.bcard{display:flex;justify-content:space-between;gap:16px;align-items:center;text-align:left;width:100%;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;cursor:pointer;min-height:64px}
+.bcard:hover{border-color:var(--accent)}
+.bcard b{display:block}
+.bcard span{color:var(--muted);font-size:15px}
+.bcard .ev{font-family:var(--display);font-size:24px;font-weight:700;white-space:nowrap}
+.bcard .ev small{font-size:13px;color:var(--muted);font-family:var(--text);font-weight:400;display:block;text-align:right}
+.spark{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:20px}
+.spark p{margin:0 0 6px;font-weight:700;font-size:15px}
+.spark svg{width:100%;height:auto;display:block}
+.spark .ln{fill:none;stroke:var(--accent);stroke-width:2.5}
+.spark .pt{fill:var(--accent)}
+.spark text{font-size:10px;fill:var(--muted);font-family:var(--text)}
+.spark .grid{stroke:var(--line);stroke-width:1}
+
+.welcome{height:100%;display:grid;place-items:center;padding:24px;text-align:center}
+.welcome div{max-width:420px}
+.welcome h1{font-size:30px;margin-bottom:10px}
+.welcome p{color:var(--muted);margin:0 0 20px}
+
+dialog{border:1px solid var(--line);border-radius:18px;padding:22px;background:var(--panel);color:var(--ink);width:min(520px,92vw);max-height:88vh}
+dialog::backdrop{background:rgba(10,20,22,.45)}
+dialog h2{font-size:22px;margin-bottom:16px}
+dialog .fields{grid-template-columns:1fr 1fr}
+.dlg-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}
+.err{color:var(--pain);font-size:14px;min-height:1.2em;margin:8px 0 0}
+
+@media (max-width:820px){
+  .app{grid-template-columns:1fr}
+  .main{display:none}
+  .app.show-main .side{display:none}
+  .app.show-main .main{display:block}
+  .btn.back{display:inline-flex}
+  .content,.pv{padding:18px 16px}
+  .topbar{padding:10px 16px 0}
+  dialog .fields{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+svg.fig.edit{touch-action:none;cursor:crosshair}
+.sil{fill:var(--body);stroke:var(--body-stroke);stroke-width:1.4;stroke-linejoin:round}
+.detail{fill:none;stroke:var(--body-stroke);stroke-width:1.1;stroke-linecap:round;opacity:.85}
+.detail.dash{stroke-dasharray:3 4}
+.mk-dot{stroke:var(--panel);stroke-width:2;opacity:.85}
+.mk-line{fill:none!important;stroke-width:5;stroke-linecap:round;stroke-linejoin:round;opacity:.72}
+.mk-dot.k-douleur{fill:var(--pain)}.mk-dot.k-paresthesie{fill:var(--pares)}.mk-dot.k-raideur{fill:var(--raid)}
+.mk-line.k-douleur{stroke:var(--pain)}.mk-line.k-paresthesie{stroke:var(--pares)}.mk-line.k-raideur{stroke:var(--raid)}
+.chip.gomme.on{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.tname{display:flex;gap:6px;align-items:center}
+.info-btn{flex:none;width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--mist);color:var(--accent);font-weight:700;font-family:var(--display);cursor:pointer;font-size:16px}
+.info-btn:hover{border-color:var(--accent)}
+#info h2{margin-bottom:6px}
+#info .sub{color:var(--muted);margin:0 0 14px}
+#info dl{margin:0}
+#info dt{font-weight:700;font-size:14px;color:var(--muted);margin-top:12px}
+#info dd{margin:2px 0 0}
+#info .note{font-size:13px;color:var(--muted);margin-top:16px}
+.sugg{background:var(--panel);border:1px dashed var(--accent);border-radius:14px;padding:14px 16px;margin-bottom:18px}
+.sugg-list{display:grid;gap:8px;margin-top:12px}
+.sugg-item{text-align:left;border:1px solid var(--line);background:var(--paper);border-radius:10px;padding:10px 12px;min-height:44px;cursor:pointer;display:flex;gap:10px;align-items:flex-start}
+.sugg-item:hover{border-color:var(--accent)}
+.sugg-item .plus{color:var(--accent);font-weight:700;flex:none}
+.sugg-item.done{opacity:.5;cursor:default}
+.sugg-item.done .plus{color:var(--muted)}
+.prevnote{background:var(--accent-soft);border-radius:12px;padding:12px 14px;margin-bottom:18px}
+.prevnote b{display:block;font-size:14px;margin-bottom:2px}
+.prevnote p{margin:0;white-space:pre-wrap}
+.sec-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:30px}
+.sec-head h2{font-size:20px}
+.spark .pt.bil{fill:var(--panel);stroke:var(--accent);stroke-width:2.5}
+.brand{white-space:nowrap;font-size:21px}
+.conseil-out{max-width:72ch}
+.conseil-out h3{font-size:17px;margin:18px 0 6px;color:var(--accent)}
+.conseil-out h3:first-child{margin-top:4px}
+.conseil-out ul{margin:4px 0 8px;padding-left:20px}
+.conseil-out li{margin:4px 0}
+.conseil-out p{margin:4px 0}
+.thinking{color:var(--muted)}
+.mr{display:flex;align-items:center;gap:10px;min-width:220px}
+.mr-v{flex:none;width:44px;height:44px;border-radius:10px;border:1px solid var(--line);background:var(--paper);font-family:var(--display);font-weight:700;font-size:22px;cursor:pointer;padding:0}
+.mr-v.lo{background:var(--warn-bg);color:var(--pain);border-color:var(--pain)}
+.mr-v.mid{color:var(--raid);border-color:var(--raid)}
+.mr-v.ok{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
+.mr-v.empty{color:var(--muted)}
+.mr-track{flex:1;min-width:150px}
+.mr-track input{height:32px;margin:0;display:block}
+.mr-ticks{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);padding:0 5px}
+input[type=range].unset{opacity:.4}
+#sendDlg{width:min(640px,94vw)}
+.send-data{white-space:pre-wrap;font-family:var(--text);font-size:14px;line-height:1.5;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 14px;max-height:45vh;overflow:auto;margin:0}
+select.pick{margin-bottom:6px;color:var(--accent);font-weight:700}
+#cpDlg{width:min(620px,94vw)}
+#cpDlg .dlg-actions{position:sticky;bottom:-22px;background:var(--panel);padding:12px 0 4px;margin-bottom:-4px;border-top:1px solid var(--line)}
+.cp-list{display:grid;gap:6px}
+.cp-row{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:10px;padding:4px 10px;background:var(--paper)}
+.cp-row input[type=checkbox]{width:24px;height:24px;accent-color:var(--accent);flex:none}
+.cp-row .cp-txt{border:0;background:transparent;min-height:40px;padding:6px 4px}
+.cp-row.done{opacity:.6}
+.cp-row small{color:var(--muted);white-space:nowrap}
+.pd-age{display:block;color:var(--muted);font-size:14px;margin-top:4px;min-height:1.2em}
+.f-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px}
+.f-head span{margin-bottom:0!important}
+.expand-btn{border:1px solid var(--line);background:var(--panel);border-radius:8px;min-height:34px;padding:0 10px;font-size:14px;cursor:pointer;color:var(--accent);font-weight:700}
+.expand-btn:hover{border-color:var(--accent)}
+#bigDlg{width:min(900px,96vw);max-height:94vh}
+.big-ta{height:62vh;font-size:18px!important;line-height:1.5}
+.memo{display:grid;grid-template-columns:1fr;gap:12px;margin:0 0 18px;max-width:640px}
+@media (max-width:820px){.memo{grid-template-columns:1fr}}
+.memo-col{background:var(--panel);border:1px solid var(--line);border-left:5px solid var(--accent);border-radius:12px;padding:12px 14px}
+.memo-col.warn{border-left-color:var(--raid)}
+.memo-col>b{display:block;font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:6px}
+.memo-col p{margin:0;white-space:pre-wrap}
+.memo-motif{font-weight:700;font-size:17px}
+.memo-sub{color:var(--muted);font-size:14px;margin-top:2px!important}
+.memo-note{margin-top:6px!important;color:var(--muted)}
+.chip.sm{min-height:34px;font-size:14px;padding:0 10px}
+#motifDlg{width:min(720px,94vw)}
+#mt-list{margin-bottom:0}
+.mt-sec h3{font-size:15px;margin:16px 0 8px;color:var(--muted)}
+.mt-sec .chips{margin-bottom:0}
+#angDlg{width:min(460px,94vw)}
+#ang-svg{width:100%;display:block;margin:10px 0 4px;touch-action:none;cursor:grab}
+.ang-val{font-family:var(--display);font-size:48px;font-weight:700;text-align:center;line-height:1}
+.ang-arc{fill:var(--accent-soft)}
+.ang-track{fill:none;stroke:var(--mist);stroke-width:16;stroke-linecap:round}
+.ang-arm{stroke:var(--accent);stroke-width:5;stroke-linecap:round}
+.ang-fix{stroke:var(--body-stroke);stroke-width:5;stroke-linecap:round}
+.ang-tick{stroke:var(--body-stroke);stroke-width:1.5}
+.ang-norm{stroke:var(--raid);stroke-width:3;stroke-linecap:round}
+.ang-prev{fill:var(--muted)}
+.ang-hub{fill:var(--accent)}
+.ang-knob{fill:var(--accent);stroke:var(--panel);stroke-width:3}
+.ang-steps{justify-content:center;margin:10px 0}
+.ang-steps .btn{min-width:64px}
+input.ang-in{cursor:pointer;caret-color:transparent}
+.bk{margin:0 0 10px}
+.bk.late{color:var(--pain);font-weight:700}
+.app[hidden],.lock[hidden]{display:none}
+.lock{position:fixed;inset:0;display:grid;place-items:center;background:var(--paper);padding:24px;padding-top:calc(24px + env(safe-area-inset-top,0px));z-index:20}
+.lock-card{width:min(380px,100%);display:grid;gap:12px}
+.lock-card h1{font-size:28px;margin-top:12px}
+.lock-card .hint{margin:0}
+.lock-card .linkbtn{justify-self:center;margin-top:4px}
+#codeDlg input{margin-top:4px}
+#info{width:min(780px,94vw)}
+.info-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:22px;align-items:start}
+@media (max-width:640px){.info-grid{grid-template-columns:1fr}}
+.sketch{width:100%;max-width:360px;display:block;background:var(--mist);border-radius:14px}
+.sk-p{stroke:var(--accent);stroke-width:10;stroke-linecap:round;fill:none}
+.sk-hd{fill:var(--accent)}
+.sk-t{stroke:var(--body-stroke);stroke-width:4;stroke-linecap:round}
+.sk-h{fill:var(--raid)}
+.sk-ham{stroke:var(--raid);stroke-width:4;stroke-linecap:round}
+.sk-a{stroke:var(--pain);stroke-width:2.6;fill:none;stroke-linecap:round}
+.sk-mk{fill:var(--pain)}
+.sk-g{stroke:var(--muted);stroke-width:1.6;fill:none;stroke-dasharray:4 3}
+.sk-z{stroke:var(--pain);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.sk-l{font-size:10px;fill:var(--muted);font-family:var(--text)}
+.sk-leg{font-size:13px;color:var(--muted);margin:8px 0 0}
+.sk-leg i{display:inline-block;width:10px;height:10px;border-radius:50%;margin:0 4px 0 8px;vertical-align:-1px}
+.sk-leg i:first-child{margin-left:0}
+
+.spark .lg{font-size:13px;color:var(--muted);margin-top:4px}
+</style>
+</head>
+<body>
+<div class="lock" id="lock" hidden>
+  <div class="lock-card">
+    <div class="brand"><svg viewBox="0 0 26 26" aria-hidden="true"><circle cx="13" cy="5" r="3.2" fill="var(--accent)"/><path d="M13 9v8M7 12l6 2 6-2M9 24l4-7 4 7" fill="none" stroke="var(--accent)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Bilan kiné</div>
+    <h1 id="lk-title">Entrez votre code</h1>
+    <p class="hint" id="lk-sub"></p>
+    <input id="lk-code" type="password" inputmode="numeric" autocomplete="off" autocapitalize="off" placeholder="Code d’accès" aria-label="Code d’accès">
+    <input id="lk-code2" type="password" inputmode="numeric" maxlength="6" autocomplete="off" autocapitalize="off" placeholder="Confirmez le code" aria-label="Confirmez le code" hidden>
+    <p class="err" id="lk-err" aria-live="polite"></p>
+    <button class="btn primary" id="lk-go">Déverrouiller</button>
+    <button class="linkbtn" id="lk-reset">Code oublié ? Réinitialiser l’application</button>
+  </div>
+</div>
+<div class="app" id="app" hidden>
+  <aside class="side">
+    <div class="side-head">
+      <div class="brand"><svg viewBox="0 0 26 26" aria-hidden="true"><circle cx="13" cy="5" r="3.2" fill="var(--accent)"/><path d="M13 9v8M7 12l6 2 6-2M9 24l4-7 4 7" fill="none" stroke="var(--accent)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Bilan kiné</div>
+      <button class="btn primary sm" data-act="newP">Nouveau patient</button>
+    </div>
+    <div class="search"><input id="q" type="search" placeholder="Rechercher un patient" aria-label="Rechercher un patient"></div>
+    <nav id="plist" class="plist" aria-label="Patients"></nav>
+    <div class="sfoot">
+      <p id="bk-info" class="bk"></p>
+      <div class="row">
+        <button class="btn primary sm" data-act="backup">Sauvegarder maintenant</button>
+        <button class="btn sm" data-act="restore">Restaurer</button>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <button class="btn sm" data-act="lock">Verrouiller</button>
+        <button class="btn sm" data-act="changeCode">Changer le code</button>
+      </div>
+      <p class="status" id="status" aria-live="polite"></p>
+    </div>
+  </aside>
+  <main class="main" id="main"></main>
+</div>
+<input type="file" id="imp" accept=".json,application/json" hidden>
+
+<dialog id="pdlg">
+  <h2 id="pd-title">Nouveau patient</h2>
+  <div class="fields">
+    <label class="f"><span>Nom</span><input id="pd-nom" type="text" autocomplete="off"></label>
+    <label class="f"><span>Prénom</span><input id="pd-prenom" type="text" autocomplete="off"></label>
+    <label class="f"><span>Date de naissance</span><input id="pd-naissance" type="text" inputmode="numeric" placeholder="JJ/MM/AAAA" maxlength="10" autocomplete="off"><small id="pd-age" class="pd-age"></small></label>
+    <label class="f"><span>Téléphone</span><input id="pd-tel" type="tel"></label>
+    <label class="f wide"><span>Notes</span><textarea id="pd-notes" rows="3"></textarea></label>
+  </div>
+  <p class="err" id="pd-err"></p>
+  <div class="dlg-actions">
+    <button class="btn" data-act="closePDlg">Annuler</button>
+    <button class="btn primary" data-act="savePDlg">Enregistrer</button>
+  </div>
+</dialog>
+
+<dialog id="cfm">
+  <h2 id="cfm-msg"></h2>
+  <div class="dlg-actions">
+    <button class="btn" id="cfm-no">Annuler</button>
+    <button class="btn primary" id="cfm-ok">Supprimer</button>
+  </div>
+</dialog>
+
+<dialog id="ccDlg">
+  <h2>Changer le code d’accès</h2>
+  <div class="fields" style="grid-template-columns:1fr">
+    <label class="f"><span>Code actuel</span><input id="cc-old" type="password" inputmode="numeric" autocomplete="off"></label>
+    <label class="f"><span>Nouveau code (6 chiffres)</span><input id="cc-new" type="password" inputmode="numeric" maxlength="6" autocomplete="off"></label>
+    <label class="f"><span>Confirmez le nouveau code</span><input id="cc-new2" type="password" inputmode="numeric" maxlength="6" autocomplete="off"></label>
+  </div>
+  <p class="err" id="cc-err"></p>
+  <div class="dlg-actions"><button class="btn" data-act="ccCancel">Annuler</button><button class="btn primary" data-act="ccSave">Changer le code</button></div>
+</dialog>
+
+<dialog id="codeDlg">
+  <h2>Code de la sauvegarde</h2>
+  <p class="hint">Cette sauvegarde a été chiffrée avec un autre code. Saisissez le code utilisé au moment de la sauvegarde.</p>
+  <input id="cd-code" type="password" autocomplete="off" aria-label="Code de la sauvegarde">
+  <div class="dlg-actions"><button class="btn" id="cd-no">Annuler</button><button class="btn primary" id="cd-ok">Valider</button></div>
+</dialog>
+
+<dialog id="motifDlg">
+  <h2>Pourquoi vient-il ?</h2>
+  <div class="chips" id="mt-list"></div>
+  <div id="mt-detail"></div>
+  <div class="dlg-actions"><button class="btn" data-act="mtCancel">Annuler</button><button class="btn primary" data-act="mtOk" id="mt-ok" disabled>Créer le bilan</button></div>
+</dialog>
+
+<dialog id="angDlg">
+  <h2 id="ang-title"></h2>
+  <p class="hint" id="ang-sub" style="margin:0"></p>
+  <svg id="ang-svg" viewBox="0 0 240 134" role="img" aria-label="Goniomètre : faites glisser pour régler l’angle"></svg>
+  <div class="ang-val"><span id="ang-num">0</span>°</div>
+  <input type="range" id="ang-range" step="1" aria-label="Angle">
+  <div class="row ang-steps">
+    <button class="btn" data-act="angStep" data-d="-5">−5</button><button class="btn" data-act="angStep" data-d="-1">−1</button>
+    <button class="btn" data-act="angStep" data-d="1">+1</button><button class="btn" data-act="angStep" data-d="5">+5</button>
+  </div>
+  <div class="chips" id="ang-quick" style="justify-content:center"></div>
+  <div class="dlg-actions"><button class="btn" data-act="angClear">Effacer</button><button class="btn" data-act="angCancel">Annuler</button><button class="btn primary" data-act="angOk">Valider</button></div>
+</dialog>
+
+<dialog id="bigDlg">
+  <h2 id="big-title"></h2>
+  <textarea id="big-ta" class="big-ta"></textarea>
+  <div class="dlg-actions"><button class="btn primary" data-act="bigDone">Terminé</button></div>
+</dialog>
+
+<dialog id="cpDlg">
+  <h2>Conseils donnés au patient</h2>
+  <p class="hint" style="margin:0 0 12px">Cochez les conseils donnés. Vous pouvez modifier le texte de chacun avant de valider.</p>
+  <div id="cp-list" class="cp-list"></div>
+  <label class="f" style="display:block;margin-top:12px"><span>Autre conseil</span><input id="cp-other" type="text" placeholder="Ex. : éviter de croiser les jambes"></label>
+  <div class="dlg-actions"><button class="btn" data-act="cpCancel">Annuler</button><button class="btn primary" data-act="cpOk" id="cp-ok">Valider</button></div>
+</dialog>
+
+<dialog id="sendDlg">
+  <h2>Envoyer ce bilan à Claude ?</h2>
+  <p class="hint" style="margin:0 0 12px">Pour préparer les conseils, les informations ci-dessous vont être envoyées à Claude. Le nom et la date de naissance du patient ne sont pas transmis. Vérifiez qu’aucun texte ne permet de l’identifier.</p>
+  <pre id="send-data" class="send-data"></pre>
+  <div class="dlg-actions"><button class="btn" id="send-no">Annuler</button><button class="btn primary" id="send-ok">Envoyer et obtenir les conseils</button></div>
+</dialog>
+
+<dialog id="info">
+  <div id="info-body"></div>
+  <div class="dlg-actions"><button class="btn primary" data-act="closeInfo">Fermer</button></div>
+</dialog>
+
+<script>
+const KEY_PLAIN = 'bilankine.v1', KEY_ENC = 'bilankine.enc', ITER = 310000;
+let S = { patients: [] };
+let cryptoKey = null, cryptoSalt = null;
+const b64 = buf => { let s = ''; const a = new Uint8Array(buf); for (let i = 0; i < a.length; i += 0x8000) s += String.fromCharCode.apply(null, a.subarray(i, i + 0x8000)); return btoa(s); };
+const unb64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+async function deriveKey(code, salt) {
+  const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(code), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey({ name: 'PBKDF2', salt, iterations: ITER, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+}
+async function encryptBytes(bytes, key, salt) {
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, bytes);
+  return { v: 1, salt: b64(salt), iv: b64(iv), ct: b64(ct) };
+}
+async function decryptEnv(env, key) {
+  const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: unb64(env.iv) }, key, unb64(env.ct));
+  return JSON.parse(new TextDecoder().decode(pt));
+}
+function readEnc() { try { const r = localStorage.getItem(KEY_ENC); return r ? JSON.parse(r) : null; } catch (e) { return null; } }
+let lastEnv = null, vaultRef = null;
+async function getVault() {
+  if (vaultRef !== null) return vaultRef || null;
+  try {
+    if (!window.claude) { vaultRef = false; return null; }
+    const [db, user] = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
+    const id = user ? await user.id() : null;
+    vaultRef = db && id ? db.collection('data/users/' + id).doc('coffre') : false;
+  } catch (e) { vaultRef = false; }
+  return vaultRef || null;
+}
+function readPlain() { try { const r = localStorage.getItem(KEY_PLAIN); const d = r && JSON.parse(r); return d && Array.isArray(d.patients) ? d : null; } catch (e) { return null; } }
+function migrate() {
+  S.patients.forEach(p => {
+    p.seances = p.seances || [];
+    p.bilans = p.bilans || [];
+    p.bilans.forEach(b => { b.marks = (b.marks || []).map(m => m.pts ? m : { v: m.v, k: m.k, pts: [[m.x, m.y]] }); });
+  });
+}
+migrate();
+const ui = { pid: null, bid: null, sid: null, tab: 'anamnese', tool: 'douleur' };
+
+const $ = s => document.querySelector(s);
+const uid = () => Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-5);
+const pad = n => String(n).padStart(2, '0');
+const today = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const fdate = d => { if (!d) return ''; const [y, m, j] = d.split('-'); return `${j}/${m}/${y}`; };
+const trunc = (s, n) => { s = String(s || '').trim().replace(/\s+/g, ' '); return s.length > n ? s.slice(0, n - 1) + '…' : s; };
+function age(d) {
+  if (!d) return '';
+  const b = new Date(d), n = new Date();
+  let a = n.getFullYear() - b.getFullYear();
+  const m = n.getMonth() - b.getMonth();
+  if (m < 0 || (m === 0 && n.getDate() < b.getDate())) a--;
+  return isNaN(a) ? '' : `${a} ans`;
+}
+
+function setStatus(t) { $('#status').textContent = t; }
+let saving = Promise.resolve();
+function save() {
+  if (!cryptoKey) return saving;
+  const bytes = new TextEncoder().encode(JSON.stringify(S)), key = cryptoKey, salt = cryptoSalt;
+  saving = saving.then(async () => {
+    const env = await encryptBytes(bytes, key, salt);
+    if (key !== cryptoKey && cryptoKey) return;
+    env.at = Date.now(); lastEnv = env;
+    const txt = JSON.stringify(env);
+    try { localStorage.setItem(KEY_ENC, txt); } catch (_) {}
+    const v = await getVault();
+    if (v) {
+      if (txt.length > 250000) { setStatus('Données trop volumineuses pour la copie en ligne : faites une sauvegarde.'); return; }
+      await v.set({ env: txt, at: env.at });
+    }
+    const d = new Date(); setStatus(`Enregistré et chiffré à ${pad(d.getHours())}:${pad(d.getMinutes())}`);
+  }).catch(() => setStatus('Enregistrement impossible sur cet appareil. Faites une sauvegarde.'));
+  return saving;
+}
+let saveT; function saveSoon() { clearTimeout(saveT); saveT = setTimeout(save, 350); }
+
+const P = () => S.patients.find(p => p.id === ui.pid);
+const B = () => { const p = P(); return p && p.bilans.find(b => b.id === ui.bid); };
+const SE = () => { const p = P(); return p && p.seances.find(s => s.id === ui.sid); };
+const byDate = (a, b) => (a.date || '') < (b.date || '') ? -1 : (a.date || '') > (b.date || '') ? 1 : 0;
+const sortedSeances = p => p.seances.map((s, i) => [s, i]).sort((a, b) => byDate(a[0], b[0]) || a[1] - b[1]).map(x => x[0]);
+const seanceNo = (p, s) => sortedSeances(p).indexOf(s) + 1;
+const seancesPrevues = p => { const b = p.bilans.slice().sort(byDate).reverse().find(x => x.seances); return b ? +b.seances : 0; };
+
+/* ---------- Référentiels ---------- */
+const NORMES = {
+  'Rachis cervical': { 'Flexion': 45, 'Extension': 70, 'Rotation': 80, 'Inclinaison': 45 },
+  'Épaule': { 'Flexion': 180, 'Extension': 50, 'Abduction': 180, 'Rotation externe': 90, 'Rotation interne': 70 },
+  'Coude': { 'Flexion': 145, 'Extension': 0, 'Pronation': 80, 'Supination': 90 },
+  'Poignet': { 'Flexion': 80, 'Extension': 70, 'Inclinaison radiale': 20, 'Inclinaison ulnaire': 35 },
+  'Hanche': { 'Flexion': 120, 'Extension': 20, 'Abduction': 45, 'Adduction': 30, 'Rotation externe': 45, 'Rotation interne': 35 },
+  'Genou': { 'Flexion': 140, 'Extension': 0 },
+  'Cheville': { 'Flexion dorsale': 20, 'Flexion plantaire': 50, 'Inversion': 30, 'Éversion': 20 },
+  'Rachis lombaire': { 'Flexion': 60, 'Extension': 25, 'Inclinaison': 25 }
+};
+const MUSCLES = ['Quadriceps', 'Ischio-jambiers', 'Moyen fessier', 'Grand fessier', 'Psoas', 'Adducteurs', 'Triceps sural', 'Tibial antérieur', 'Deltoïde', 'Supra-épineux', 'Infra-épineux', 'Sub-scapulaire', 'Biceps brachial', 'Triceps brachial', 'Extenseurs du poignet', 'Fléchisseurs du poignet', 'Fibulaires', 'Trapèze supérieur', 'Fléchisseurs profonds du cou'];
+const TESTINFO = {
+  'Lachman': { z: 'Genou', but: 'Intégrité du ligament croisé antérieur (LCA).', how: 'Patient en décubitus, genou fléchi à 20–30°. Une main stabilise le fémur, l’autre imprime une translation antérieure au tibia.', pos: 'Translation antérieure augmentée par rapport au côté sain, avec un arrêt mou ou absent.' },
+  'Tiroir antérieur': { z: 'Genou (existe aussi à la cheville)', but: 'Genou : intégrité du LCA. Cheville : ligament talo-fibulaire antérieur.', how: 'Genou : décubitus, genou fléchi à 90°, pied stabilisé, traction antérieure du tibia. Cheville : pied en légère flexion plantaire, translation antérieure du talus.', pos: 'Translation antérieure excessive par rapport au côté sain.' },
+  'Tiroir postérieur': { z: 'Genou', but: 'Intégrité du ligament croisé postérieur (LCP).', how: 'Décubitus, genou fléchi à 90°, poussée postérieure sur le tibia.', pos: 'Recul postérieur du tibia, perte du décalage normal des plateaux tibiaux en avant des condyles.' },
+  'Valgus forcé': { z: 'Genou', but: 'Ligament collatéral médial (LCM).', how: 'Contrainte en valgus à 0° puis à 30° de flexion, cuisse stabilisée.', pos: 'Douleur et/ou bâillement médial. Un bâillement en extension complète oriente vers une lésion associée (pivot central, coque).' },
+  'Varus forcé': { z: 'Genou', but: 'Ligament collatéral latéral (LCL) et plan postéro-latéral.', how: 'Contrainte en varus à 0° puis à 30° de flexion.', pos: 'Douleur et/ou bâillement latéral.' },
+  'McMurray': { z: 'Genou', but: 'Lésion méniscale.', how: 'Genou en flexion maximale, rotation du tibia puis extension progressive. Rotation externe pour le ménisque médial, interne pour le latéral.', pos: 'Claquement ou ressaut douloureux perçu sur l’interligne articulaire.' },
+  'Neer': { z: 'Épaule', but: 'Conflit sous-acromial.', how: 'Scapula stabilisée, élévation antérieure passive du bras tendu en rotation interne.', pos: 'Reproduction de la douleur antéro-supérieure de l’épaule.' },
+  'Hawkins-Kennedy': { z: 'Épaule', but: 'Conflit sous-acromial ou sous-coracoïdien.', how: 'Épaule fléchie à 90°, coude fléchi à 90°, rotation interne passive.', pos: 'Reproduction de la douleur de l’épaule.' },
+  'Jobe': { z: 'Épaule', but: 'Supra-épineux.', how: 'Bras à 90° d’abduction dans le plan de la scapula, en rotation interne (pouces vers le bas). Résistance vers le bas.', pos: 'Douleur et/ou faiblesse par rapport au côté sain.' },
+  'Patte': { z: 'Épaule', but: 'Infra-épineux et rotateurs externes.', how: 'Bras à 90° d’abduction, coude à 90°, rotation externe contre résistance.', pos: 'Faiblesse ou douleur, impossibilité de maintenir la rotation externe.' },
+  'Belly press': { z: 'Épaule', but: 'Sub-scapulaire.', how: 'Main à plat sur l’abdomen, le patient pousse contre son ventre en gardant le coude en avant.', pos: 'Le coude recule ou le poignet se fléchit pour compenser.' },
+  'Lasègue': { z: 'Rachis lombaire', but: 'Tension radiculaire L5 / S1 (lombosciatique).', how: 'Décubitus, élévation passive de la jambe tendue.', pos: 'Reproduction de la douleur radiculaire sous le genou, classiquement entre 30° et 70°.' },
+  'Slump': { z: 'Rachis', but: 'Mécanosensibilité neuro-méningée.', how: 'Assis, flexion du rachis puis flexion cervicale, extension du genou et flexion dorsale de cheville. On relâche ensuite la flexion cervicale.', pos: 'Symptômes reproduits et modifiés par la flexion ou l’extension cervicale.' },
+  'Thomas': { z: 'Hanche', but: 'Raideur des fléchisseurs de hanche (psoas, droit fémoral).', how: 'Décubitus en bord de table, le patient ramène le genou opposé contre la poitrine.', pos: 'La cuisse testée décolle de la table (psoas) ou le genou s’étend (droit fémoral).' },
+  'FABER': { z: 'Hanche / sacro-iliaque', but: 'Atteinte de la hanche ou de l’articulation sacro-iliaque (test de Patrick).', how: 'Flexion, abduction et rotation externe (jambe « en 4 »), pression sur le genou et l’épine iliaque opposée.', pos: 'Douleur inguinale (hanche) ou fessière postérieure (sacro-iliaque), ou limitation par rapport au côté sain.' },
+  'Spurling': { z: 'Rachis cervical', but: 'Radiculopathie cervicale.', how: 'Extension, inclinaison et rotation homolatérales, puis compression axiale douce.', pos: 'Douleur radiculaire irradiant dans le membre supérieur.' },
+  'Phalen': { z: 'Poignet', but: 'Syndrome du canal carpien.', how: 'Flexion maximale des poignets, dos des mains l’un contre l’autre, pendant 60 secondes.', pos: 'Paresthésies dans le territoire du nerf médian (pouce, index, majeur).' },
+  'Tinel': { z: 'Nerf périphérique', but: 'Compression ou régénération nerveuse (ex. : nerf médian au canal carpien).', how: 'Percussion le long du trajet du nerf.', pos: 'Paresthésies irradiant dans le territoire du nerf.' }
+};
+const TESTS = Object.keys(TESTINFO);
+const SCORES = ['KOOS', 'IKDC', 'Lysholm', 'DASH', 'Quick-DASH', 'Oswestry', 'NDI', 'Timed Up and Go', 'Tinetti', 'Berg', 'CAIT'];
+const COTES = ['', '0', '1', '2', '3', '4', '5'];
+const TABS = [['anamnese', 'Anamnèse'], ['douleur', 'Douleur'], ['articulaire', 'Articulaire'], ['musculaire', 'Musculaire'], ['tests', 'Tests et scores'], ['synthese', 'Synthèse']];
+const MARKS = { douleur: 'Douleur', paresthesie: 'Paresthésie', raideur: 'Raideur' };
+const MARKVAR = { douleur: 'pain', paresthesie: 'pares', raideur: 'raid' };
+const CONSEILS_PATIENT = ['Glaçage 15 min, 2 à 3 fois par jour', 'Repos relatif : éviter les gestes douloureux', 'Rester actif malgré la douleur', 'Reprise progressive des activités', 'Auto-exercices quotidiens', 'Marche quotidienne', 'Chaleur pour détendre les muscles', 'Surélever le membre', 'Port de la contention ou de l’attelle', 'Adapter le poste de travail', 'Position de sommeil', 'Consulter en cas d’aggravation'];
+const TECHS = ['Massage', 'Mobilisations passives', 'Mobilisations actives aidées', 'Thérapie manuelle', 'Renforcement', 'Étirements', 'Proprioception', 'Travail de la marche', 'Cryothérapie / chaleur', 'Électrothérapie', 'Drainage', 'Exercices respiratoires', 'Éducation thérapeutique', 'Auto-exercices remis'];
+
+function blank() {
+  return { id: uid(), date: today(), type: 'Initial', prescripteur: '', motif: '', diagMed: '', atcd: '', traitements: '', imagerie: '', activites: '', attentes: '',
+    evaRepos: '', evaAct: '', horaire: '', douleurType: '', aggravants: '', soulageants: '', marks: [],
+    articulaire: [], obsArt: '', musculaire: [], obsMusc: '', tests: [], scores: [], fonctionnel: '', diagKine: '', objectifs: '', plan: '', seances: '', notes: '' };
+}
+function followUp(src) {
+  const b = blank();
+  ['prescripteur', 'motif', 'diagMed', 'atcd', 'traitements', 'imagerie', 'activites', 'attentes', 'objectifs', 'seances'].forEach(k => b[k] = src[k] || '');
+  b.type = 'Intermédiaire';
+  b.articulaire = src.articulaire.map(r => ({ ...r, g: '', d: '' }));
+  b.musculaire = src.musculaire.map(r => ({ ...r, g: '', d: '' }));
+  b.tests = src.tests.map(r => ({ ...r, r: '', note: '' }));
+  b.scores = src.scores.map(r => ({ ...r, v: '' }));
+  return b;
+}
+function newSeance(p) {
+  const last = sortedSeances(p).pop();
+  return { id: uid(), date: today(), eva: '', ressenti: '', techs: last ? [...last.techs] : [], detail: last ? last.detail : '', reaction: '', consignes: last ? last.consignes : '', prochaine: '' };
+}
+function prevBilan() {
+  const p = P(), b = B(); if (!p || !b) return null;
+  const idx = x => p.bilans.indexOf(x);
+  const s = p.bilans.filter(x => x !== b && ((x.date || '') < (b.date || '') || (x.date === b.date && idx(x) < idx(b)))).sort(byDate);
+  return s.pop() || null;
+}
+const bTitle = b => `Bilan ${(b.type || 'initial').toLowerCase()} du ${fdate(b.date)}`;
+const sTitle = (p, s) => `Séance ${seanceNo(p, s)} du ${fdate(s.date)}`;
+const pName = p => `${(p.nom || '').toUpperCase()} ${p.prenom || ''}`.trim();
+
+/* ---------- Sidebar ---------- */
+function renderBackupInfo() {
+  const el = $('#bk-info'); if (!el) return;
+  const n = S.patients.length;
+  if (!S.lastBackup) {
+    el.textContent = n ? 'Aucune sauvegarde pour l’instant : les données ne sont que sur cet iPad.' : 'Les données restent sur cet iPad, chiffrées avec votre code.';
+    el.classList.toggle('late', n > 0); return;
+  }
+  const d = new Date(S.lastBackup), days = Math.floor((Date.now() - d.getTime()) / 86400000);
+  el.textContent = `Dernière sauvegarde : ${days === 0 ? 'aujourd’hui' : days === 1 ? 'hier' : `il y a ${days} jours`} (${pad(d.getDate())}/${pad(d.getMonth() + 1)}).`;
+  el.classList.toggle('late', days >= 7);
+}
+function renderSide() {
+  renderBackupInfo();
+  const q = ($('#q').value || '').trim().toLowerCase();
+  const list = S.patients.filter(p => `${p.nom} ${p.prenom}`.toLowerCase().includes(q))
+    .sort((a, b) => (a.nom || '').localeCompare(b.nom || '', 'fr') || (a.prenom || '').localeCompare(b.prenom || '', 'fr'));
+  $('#plist').innerHTML = list.length ? list.map(p => {
+    const nb = p.bilans.length, ns = p.seances.length;
+    const parts = [];
+    if (nb) parts.push(`${nb} bilan${nb > 1 ? 's' : ''}`);
+    if (ns) parts.push(`${ns} séance${ns > 1 ? 's' : ''}`);
+    return `<button class="pitem${p.id === ui.pid ? ' on' : ''}" data-act="openP" data-id="${p.id}">
+      <span class="pn">${esc(pName(p))}</span><span class="pm">${parts.length ? parts.join(', ') : 'Aucun bilan'}</span></button>`;
+  }).join('') : `<p class="empty">${S.patients.length ? 'Aucun patient ne correspond à cette recherche.' : 'Créez votre premier patient pour commencer un bilan.'}</p>`;
+}
+
+/* ---------- Main ---------- */
+function renderMain() {
+  const app = $('#app'), main = $('#main');
+  const p = P(), b = B(), s = SE();
+  app.classList.toggle('show-main', !!p);
+  if (!p) {
+    main.innerHTML = `<div class="welcome"><div><h1>Vos bilans, au cabinet</h1>
+      <p>Choisissez un patient dans la liste ou créez-en un. Bilans et séances s’enregistrent automatiquement sur cet iPad.</p>
+      <button class="btn primary" data-act="newP">Nouveau patient</button></div></div>`;
+    return;
+  }
+  const who = `<span class="who">${esc(pName(p))}${p.naissance ? `, ${age(p.naissance)}` : ''}</span>`;
+  if (s) {
+    const prev = prevSeance(p, s), prevu = seancesPrevues(p);
+    main.innerHTML = `<div class="topbar"><div class="topline">
+        <button class="btn sm" data-act="closeB" aria-label="Retour à la fiche patient">‹ Fiche</button>
+        <h1><span id="stitle">${esc(sTitle(p, s))}</span>${who}</h1>
+        <button class="icon-btn" data-act="delS" aria-label="Supprimer cette séance" title="Supprimer cette séance">🗑</button>
+      </div></div>
+      <div class="content">${seanceForm(p, s, prev, prevu)}</div>`;
+    return;
+  }
+  if (!b) { main.innerHTML = patientView(p); return; }
+  main.innerHTML = `<div class="topbar">
+      <div class="topline">
+        <button class="btn sm" data-act="closeB" aria-label="Retour à la fiche patient">‹ Fiche</button>
+        <h1><span id="btitle">${esc(bTitle(b))}</span>${who}</h1>
+        <button class="btn sm" data-act="export">Exporter le compte rendu</button>
+        <button class="icon-btn" data-act="delB" aria-label="Supprimer ce bilan" title="Supprimer ce bilan">🗑</button>
+      </div>
+      <div class="tabs" role="tablist">${TABS.map(([k, l]) => `<button class="tab" role="tab" data-act="tab" data-k="${k}" aria-selected="${ui.tab === k}">${l}</button>`).join('')}</div>
+    </div>
+    <div class="content" id="content">${tabContent(b)}</div>`;
+}
+
+function prevSeance(p, s) { const l = sortedSeances(p); const i = l.indexOf(s); return i > 0 ? l[i - 1] : null; }
+
+function seanceForm(p, s, prev, prevu) {
+  const n = seanceNo(p, s);
+  const f = (label, k, ph = '', wide = false) => `<label class="f${wide ? ' wide' : ''}"><span>${label}</span><textarea data-sf="${k}" rows="3" placeholder="${esc(ph)}">${esc(s[k])}</textarea></label>`;
+  return `
+    ${memoCard(p, false)}
+    ${prevu ? `<p class="hint">Séance ${n} sur ${prevu} prévues au dernier bilan.</p>` : ''}
+    ${prev && prev.prochaine ? `<div class="prevnote"><b>Prévu lors de la séance précédente</b><p>${esc(prev.prochaine)}</p></div>` : ''}
+    <div class="fields">
+      <label class="f"><span>Date</span><input type="date" data-sf="date" value="${esc(s.date)}"></label>
+      <div class="eva-box">
+        <div class="eva-top"><span>EVA en début de séance</span><div class="eva-val"><span id="v-seva">${s.eva === '' ? '—' : s.eva}</span><small> /10</small></div></div>
+        <input type="range" min="0" max="10" step="1" value="${s.eva === '' ? 0 : s.eva}" data-sf="eva" aria-label="EVA en début de séance">
+        <button class="linkbtn" data-act="clearSEva">Non évaluée</button>
+      </div>
+      ${f('Ressenti du patient depuis la dernière séance', 'ressenti', 'Douleurs, sommeil, progrès, difficultés…', true)}
+    </div>
+    <h2>Techniques réalisées</h2>
+    <p class="hint">${prev ? 'Pré-rempli d’après la séance précédente, touchez pour ajuster.' : 'Touchez pour sélectionner.'}</p>
+    <div class="chips">${TECHS.map(t => `<button class="chip${s.techs.includes(t) ? ' on' : ''}" data-act="tech" data-t="${esc(t)}" aria-pressed="${s.techs.includes(t)}">${t}</button>`).join('')}</div>
+    <div class="fields">
+      ${f('Détail et dosages', 'detail', 'Exercices, charges, séries, répétitions…', true)}
+      ${f('Réaction et observations', 'reaction', 'Tolérance, progrès mesurés, signes d’alerte…')}
+      ${f('Consignes et auto-exercices', 'consignes')}
+      ${f('À prévoir la prochaine fois', 'prochaine', 'S’affichera en haut de la prochaine séance', true)}
+    </div>`;
+}
+
+const RESTR = ['Appui partiel', 'Pas d’appui', 'Attelle à conserver', 'Amplitudes limitées (préciser)', 'Pas de renforcement contre résistance', 'Délai post-opératoire à respecter', 'Traitement anticoagulant', 'Ostéoporose', 'Pacemaker : pas d’électrothérapie', 'Grossesse'];
+function memoCard(p, edit) {
+  const lb = p.bilans.slice().sort(byDate).pop();
+  const motif = lb ? (lb.diagMed || lb.motifType || 'Motif non renseigné') : 'Pas encore de bilan';
+  const sub = lb ? `Bilan du ${fdate(lb.date)}${lb.prescripteur ? `, ${lb.prescripteur}` : ''}` : '';
+  if (!edit) {
+    if (!lb && !p.memo) return '';
+    return `<div class="memo"><div class="memo-col"><b>Motif</b><p class="memo-motif">${esc(motif)}</p>${p.memo ? `<p class="memo-note">${esc(p.memo)}</p>` : ''}</div></div>`;
+  }
+  return `<div class="memo"><div class="memo-col"><b>Pourquoi il vient</b><p class="memo-motif">${esc(motif)}</p>${sub ? `<p class="memo-sub">${esc(sub)}</p>` : ''}
+    <label class="f" style="margin-top:10px;display:block"><span>Note rapide</span><textarea data-pf="memo" rows="2" placeholder="Ex. : veut reprendre le tennis en mars">${esc(p.memo || '')}</textarea></label></div></div>`;
+}
+function patientView(p) {
+  const bs = p.bilans.slice().sort(byDate).reverse();
+  const ss = sortedSeances(p).reverse();
+  const has = bs.length > 0, prevu = seancesPrevues(p);
+  return `<section class="pv">
+    <button class="btn sm back" data-act="back">‹ Patients</button>
+    <h1>${esc(pName(p))}</h1>
+    <p class="meta">${[p.naissance ? `${age(p.naissance)}, né(e) le ${fdate(p.naissance)}` : '', p.tel ? esc(p.tel) : ''].filter(Boolean).join(', ') || 'Fiche à compléter'}</p>
+    ${memoCard(p, true)}
+    <div class="row">
+      <button class="btn" data-act="editP">Modifier la fiche</button>
+      <button class="btn danger" data-act="delP">Supprimer le patient</button>
+    </div>
+    ${p.notes ? `<p style="white-space:pre-wrap;margin-top:16px">${esc(p.notes)}</p>` : ''}
+    ${spark(p)}
+    <div class="sec-head"><h2>Séances${ss.length ? ` (${ss.length}${prevu ? ` sur ${prevu}` : ''})` : ''}</h2>
+      <div class="row">${ss.length ? `<button class="btn sm" data-act="exportSuivi">Exporter le suivi</button>` : ''}<button class="btn primary sm" data-act="newS">Nouvelle séance</button></div></div>
+    ${ss.length ? `<div class="blist">${ss.map(s => `
+      <button class="bcard" data-act="openS" data-id="${s.id}">
+        <div><b>${esc(sTitle(p, s))}</b><span>${esc(trunc(s.ressenti || s.techs.join(', ') || 'Rien de noté', 90))}</span></div>
+        <div class="ev">${s.eva !== '' ? s.eva : '—'}<small>EVA</small></div>
+      </button>`).join('')}</div>` : `<p class="empty">Aucune séance notée. Chaque séance garde l’EVA, le ressenti, les techniques et ce qui est prévu ensuite.</p>`}
+    <div class="sec-head"><h2>Bilans</h2>
+      <div class="row">${has ? `<button class="btn sm" data-act="newB">Bilan vierge</button><button class="btn primary sm" data-act="newFollow">Bilan de suivi</button>` : `<button class="btn primary sm" data-act="newB">Commencer le bilan initial</button>`}</div></div>
+    ${has ? `<p class="hint" style="margin-top:8px">Le bilan de suivi reprend l’anamnèse et la liste des mesures du dernier bilan, valeurs vides, pour comparer facilement.</p>
+      <div class="blist">${bs.map(b => `
+      <button class="bcard" data-act="openB" data-id="${b.id}">
+        <div><b>${esc(bTitle(b))}</b><span>${esc(trunc(b.motifType && b.motifType !== 'Autre' ? b.motifType + (b.motif ? ' : ' + b.motif : '') : (b.motif || b.diagMed || 'Motif non renseigné'), 90))}</span></div>
+        <div class="ev">${b.evaAct !== '' ? b.evaAct : '—'}<small>EVA activité</small></div>
+      </button>`).join('')}</div>` : ''}
+  </section>`;
+}
+
+function spark(p) {
+  const pts = [
+    ...p.bilans.map(b => ({ d: b.date, v: b.evaAct !== '' ? +b.evaAct : (b.evaRepos !== '' ? +b.evaRepos : null), bil: true })),
+    ...p.seances.map(s => ({ d: s.date, v: s.eva !== '' ? +s.eva : null, bil: false }))
+  ].filter(x => x.v !== null).sort((a, b) => byDate({ date: a.d }, { date: b.d }));
+  if (pts.length < 2) return '';
+  const W = 320, H = 110, L = 22, R = 10, T = 8, Bm = 22;
+  const x = i => L + (W - L - R) * (i / (pts.length - 1));
+  const y = v => T + (H - T - Bm) * (1 - v / 10);
+  const grid = [0, 5, 10].map(v => `<line class="grid" x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text x="4" y="${y(v) + 3}">${v}</text>`).join('');
+  const every = Math.ceil(pts.length / 8);
+  return `<div class="spark"><p>Évolution de l’EVA</p><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Évolution de l’EVA">${grid}
+    <polyline class="ln" points="${pts.map((p, i) => `${x(i)},${y(p.v)}`).join(' ')}"/>
+    ${pts.map((p, i) => `<circle class="pt${p.bil ? ' bil' : ''}" cx="${x(i)}" cy="${y(p.v)}" r="${p.bil ? 4.5 : 3.5}"/>${i % every === 0 || i === pts.length - 1 ? `<text x="${x(i)}" y="${H - 6}" text-anchor="middle">${fdate(p.d).slice(0, 5)}</text>` : ''}`).join('')}
+  </svg><p class="lg">Cercles vides : bilans. Points pleins : séances.</p></div>`;
+}
+
+/* ---------- Champs ---------- */
+const PAIN_TYPES = {
+  'Mécanisme': ['Nociceptive mécanique', 'Nociceptive inflammatoire', 'Neuropathique', 'Nociplastique (sensibilisation)', 'Mixte'],
+  'Caractère': ['Brûlure', 'Décharge électrique', 'Coup de poignard', 'Lancinante', 'Pulsatile', 'Sourde', 'Pesanteur', 'Serrement, étau', 'Tiraillement', 'Crampe', 'Fourmillements', 'Picotements', 'Engourdissement', 'Raideur douloureuse'],
+  'Localisation': ['Localisée', 'Diffuse', 'Irradiante', 'Projetée']
+};
+const AGGRAV = ['Station debout prolongée', 'Position assise prolongée', 'Marche', 'Escaliers', 'Course, saut', 'Port de charges', 'Flexion du tronc', 'Extension du tronc', 'Rotation', 'Bras au-dessus de la tête', 'Gestes répétés', 'Effort, sport', 'Toux, éternuement', 'Réveil, dérouillage matinal', 'Nuit, couché', 'Fin de journée', 'Froid, humidité', 'Stress, fatigue'];
+const SOULAG = ['Repos', 'Mouvement doux, activité', 'Chaleur', 'Froid, glaçage', 'Position allongée', 'Changement de position', 'Marche', 'Étirements', 'Massage', 'Antalgiques', 'Anti-inflammatoires', 'Attelle, contention'];
+function pickFld(label, k, opts, ph, area) {
+  const v = esc(B()[k] ?? '');
+  const o = a => a.map(x => `<option value="${esc(x)}">${x}</option>`).join('');
+  const list = Array.isArray(opts) ? o(opts) : Object.entries(opts).map(([g, a]) => `<optgroup label="${esc(g)}">${o(a)}</optgroup>`).join('');
+  return `<div class="f"><span>${label}</span>
+    <select class="pick" data-pick="${k}" aria-label="Ajouter : ${esc(label)}"><option value="">+ Choisir dans la liste…</option>${list}<option value="__autre">Autre : saisir ci-dessous</option></select>
+    ${area ? `<textarea data-f="${k}" id="f-${k}" rows="2" placeholder="${esc(ph)}">${v}</textarea>` : `<input type="text" data-f="${k}" id="f-${k}" value="${v}" placeholder="${esc(ph)}">`}</div>`;
+}
+function pickAdd(sel) {
+  const b = B(), k = sel.dataset.pick, v = sel.value; sel.value = '';
+  const f = $('#f-' + k); if (!b || !v) return;
+  if (v === '__autre') { f.focus(); return; }
+  const cur = String(b[k] || '').trim().replace(/[,;\s]+$/, '');
+  if (cur.toLowerCase().split(/\s*[,;\n]\s*/).includes(v.toLowerCase())) return;
+  b[k] = cur ? cur + ', ' + v : v; f.value = b[k];
+  if (f.tagName === 'TEXTAREA') autoGrow(f);
+  saveSoon();
+}
+const BIG = { motif: 6, atcd: 4 };
+function fld(label, k, type = 'text', ph = '', wide = false) {
+  const v = esc(B()[k] ?? '');
+  if (type === 'area' && BIG[k]) return `<div class="f${wide ? ' wide' : ''}"><div class="f-head"><span>${label}</span><button class="expand-btn" data-act="expand" data-k="${k}" data-label="${esc(label)}">⤢ Agrandir</button></div><textarea data-f="${k}" id="f-${k}" rows="${BIG[k]}" placeholder="${esc(ph)}" aria-label="${esc(label)}">${v}</textarea></div>`;
+  const input = type === 'area' ? `<textarea data-f="${k}" id="f-${k}" rows="3" placeholder="${esc(ph)}">${v}</textarea>` : `<input type="${type}" data-f="${k}" value="${v}" placeholder="${esc(ph)}">`;
+  return `<label class="f${wide ? ' wide' : ''}"><span>${label}</span>${input}</label>`;
+}
+function sel(label, k, opts) {
+  const cur = B()[k] || '';
+  return `<label class="f"><span>${label}</span><select data-f="${k}">${opts.map(o => `<option value="${esc(o)}"${cur === o ? ' selected' : ''}>${o || '—'}</option>`).join('')}</select></label>`;
+}
+function rowSel(list, i, k, opts, cur) {
+  return `<select data-list="${list}" data-i="${i}" data-k="${k}" aria-label="${k}">${opts.map(o => `<option value="${esc(o)}"${(cur || '') === o ? ' selected' : ''}>${o || '—'}</option>`).join('')}</select>`;
+}
+const mClass = v => v === '' || v == null ? 'empty' : +v <= 2 ? 'lo' : +v <= 4 ? 'mid' : 'ok';
+function mRange(i, k, v) {
+  const has = v !== '' && v != null, side = k === 'g' ? 'gauche' : 'droite';
+  return `<div class="mr"><button class="mr-v ${mClass(v)}" data-act="mClear" data-i="${i}" data-k="${k}" title="Effacer" aria-label="Cotation ${side} : ${has ? v : 'non évaluée'}">${has ? v : '—'}</button>
+    <div class="mr-track"><input type="range" min="0" max="5" step="1" value="${has ? v : 0}" data-mr="1" data-i="${i}" data-k="${k}" class="${has ? '' : 'unset'}" aria-label="Cotation ${side}"><div class="mr-ticks"><span>0</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span></div></div></div>`;
+}
+function mSet(el) {
+  const b = B(); if (!b) return;
+  const r = b.musculaire[+el.dataset.i]; if (!r) return;
+  r[el.dataset.k] = String(el.value); el.classList.remove('unset');
+  const btn = el.closest('.mr').querySelector('.mr-v'); btn.textContent = el.value; btn.className = 'mr-v ' + mClass(el.value);
+  saveSoon();
+}
+const isLow = (v, n) => n !== '' && +n > 0 && v !== '' && !isNaN(+v) && +v < 0.8 * +n;
+
+function tabContent(b) {
+  const prev = prevBilan();
+  switch (ui.tab) {
+    case 'anamnese': return `<div class="fields">
+        ${fld('Date du bilan', 'date', 'date')}
+        ${sel('Motif de prise en charge', 'motifType', ['', ...Object.keys(MOTIFS)])}
+        ${sel('Côté atteint', 'cote', ['', ...COTES_ATT])}
+        ${sel('Type de bilan', 'type', ['Initial', 'Intermédiaire', 'Final'])}
+        ${fld('Prescripteur', 'prescripteur', 'text', 'Dr …')}
+        ${fld('Diagnostic médical / prescription', 'diagMed', 'text', 'Ex. : entorse externe cheville droite')}
+        ${fld('Motif de consultation et histoire de la maladie', 'motif', 'area', 'Mécanisme, date, évolution…', true)}
+        ${fld('Antécédents', 'atcd', 'area', 'Médicaux, chirurgicaux, traumatiques', true)}
+        ${fld('Traitements en cours', 'traitements', 'area')}
+        ${fld('Imagerie et examens', 'imagerie', 'area')}
+        ${fld('Profession, sports, activités', 'activites', 'area')}
+        ${fld('Attentes du patient', 'attentes', 'area', '', true)}
+      </div>`;
+    case 'douleur': return `
+      <h2>Intensité</h2>
+      <div class="eva">${['evaRepos', 'evaAct'].map(k => `<div class="eva-box">
+          <div class="eva-top"><span>${k === 'evaRepos' ? 'EVA au repos' : 'EVA à l’activité'}</span>
+          <div class="eva-val"><span id="v-${k}">${b[k] === '' ? '—' : b[k]}</span><small> /10</small></div></div>
+          <input type="range" min="0" max="10" step="1" value="${b[k] === '' ? 0 : b[k]}" data-f="${k}" aria-label="${k === 'evaRepos' ? 'EVA au repos' : 'EVA à l’activité'}">
+          <button class="linkbtn" data-act="clearEva" data-k="${k}">Non évaluée</button></div>`).join('')}</div>
+      <div class="fields" style="margin-top:16px">
+        ${sel('Horaire', 'horaire', ['', 'Mécanique', 'Inflammatoire', 'Mixte'])}
+        ${pickFld('Type de douleur', 'douleurType', PAIN_TYPES, 'Choisissez ou écrivez librement', false)}
+        ${pickFld('Facteurs aggravants', 'aggravants', AGGRAV, 'Choisissez ou écrivez librement', true)}
+        ${pickFld('Facteurs soulageants', 'soulageants', SOULAG, 'Choisissez ou écrivez librement', true)}
+      </div>
+      <h2>Schéma corporel</h2>
+      <p class="hint">Choisissez un symptôme puis dessinez directement sur la silhouette, au doigt ou à l’Apple Pencil. Une simple touche fait un point. La gomme efface le trait touché.</p>
+      <div class="chips tools">${Object.entries(MARKS).map(([k, l]) => `<button class="chip${ui.tool === k ? ' on' : ''}" data-act="tool" data-k="${k}"><span class="dot" style="background:var(--${MARKVAR[k]})"></span>${l}</button>`).join('')}
+        <button class="chip gomme${ui.tool === 'gomme' ? ' on' : ''}" data-act="tool" data-k="gomme">Gomme</button>
+        <button class="chip" data-act="undoMark">Annuler le dernier trait</button>
+        <button class="chip" data-act="clearMarks">Tout effacer</button></div>
+      <div id="bodyzone">${bodyZone(b.marks, true)}</div>`;
+    case 'articulaire': return `
+      <h2>Bilan articulaire</h2>
+      <p class="hint">Touchez une articulation pour ajouter ses mouvements, puis une case pour régler l’angle sur le goniomètre. Les amplitudes inférieures à 80 % de la norme sont signalées${prev ? ', et les valeurs du bilan précédent s’affichent sous chaque case' : ''}.</p>
+      <div class="chips">${Object.keys(NORMES).map(j => `<button class="chip" data-act="addJ" data-j="${esc(j)}">+ ${j}</button>`).join('')}<button class="chip" data-act="addRow" data-list="articulaire">+ Ligne libre</button></div>
+      ${b.articulaire.length ? `<div class="tbl"><table><thead><tr><th>Mouvement</th><th>Gauche (°)</th><th>Droite (°)</th><th>Norme (°)</th><th></th></tr></thead><tbody>
+      ${b.articulaire.map((r, i) => {
+        const pr = prev && prev.articulaire.find(x => x.j === r.j && x.m === r.m);
+        const hint = k => pr && pr[k] !== '' && pr[k] !== undefined ? `<small>avant ${esc(pr[k])}°</small>` : '';
+        return `<tr>
+          <td class="mv">${r.free ? `<input type="text" data-list="articulaire" data-i="${i}" data-k="j" value="${esc(r.j)}" placeholder="Articulation" style="margin-bottom:6px"><input type="text" data-list="articulaire" data-i="${i}" data-k="m" value="${esc(r.m)}" placeholder="Mouvement">` : `<b>${esc(r.j)}</b><span>${esc(r.m)}</span>`}</td>
+          <td class="num${isLow(r.g, r.n) ? ' low' : ''}" data-c="g"><input class="ang-in" readonly data-ang="1" data-list="articulaire" data-i="${i}" data-k="g" value="${esc(r.g)}" placeholder="—" aria-label="Gauche, toucher pour mesurer">${hint('g')}</td>
+          <td class="num${isLow(r.d, r.n) ? ' low' : ''}" data-c="d"><input class="ang-in" readonly data-ang="1" data-list="articulaire" data-i="${i}" data-k="d" value="${esc(r.d)}" placeholder="—" aria-label="Droite, toucher pour mesurer">${hint('d')}</td>
+          <td class="num"><input inputmode="decimal" data-list="articulaire" data-i="${i}" data-k="n" value="${esc(r.n)}" aria-label="Norme"></td>
+          <td><button class="icon-btn" data-act="delRow" data-list="articulaire" data-i="${i}" aria-label="Supprimer la ligne">×</button></td></tr>`;
+      }).join('')}</tbody></table></div>` : `<p class="empty">Aucune mesure pour l’instant.</p>`}
+      <div class="fields" style="margin-top:20px">${fld('Observations (sensation de fin de course, compensations…)', 'obsArt', 'area', '', true)}</div>`;
+    case 'musculaire': return `
+      <h2>Testing musculaire</h2>
+      <p class="hint">Faites glisser la réglette de 0 à 5 pour chaque côté, touchez la valeur pour l’effacer. <button class="linkbtn" data-act="infoMRC">Voir l’échelle de cotation</button></p>
+      <div class="chips">${MUSCLES.map(m => `<button class="chip" data-act="addM" data-m="${esc(m)}">+ ${m}</button>`).join('')}<button class="chip" data-act="addRow" data-list="musculaire">+ Ligne libre</button></div>
+      ${b.musculaire.length ? `<div class="tbl"><table><thead><tr><th>Muscle ou groupe</th><th>Gauche</th><th>Droite</th><th></th></tr></thead><tbody>
+      ${b.musculaire.map((r, i) => {
+        const pr = prev && prev.musculaire.find(x => x.m === r.m);
+        const hint = k => pr && pr[k] ? `<small>avant ${esc(pr[k])}</small>` : '';
+        return `<tr><td><input type="text" data-list="musculaire" data-i="${i}" data-k="m" value="${esc(r.m)}" placeholder="Muscle"></td>
+          <td>${mRange(i, 'g', r.g)}${hint('g')}</td>
+          <td>${mRange(i, 'd', r.d)}${hint('d')}</td>
+          <td><button class="icon-btn" data-act="delRow" data-list="musculaire" data-i="${i}" aria-label="Supprimer la ligne">×</button></td></tr>`;
+      }).join('')}</tbody></table></div>` : `<p class="empty">Aucun muscle testé pour l’instant.</p>`}
+      <div class="fields" style="margin-top:20px">${fld('Extensibilité, trophicité, observations', 'obsMusc', 'area', 'Ex. : raccourcissement des ischio-jambiers, amyotrophie quadricipitale…', true)}</div>`;
+    case 'tests': return `
+      <h2>Tests spécifiques</h2>
+      <p class="hint">Touchez « i » à côté d’un test pour voir à quoi il sert, comment le réaliser et quand il est positif.</p>
+      <div class="chips">${TESTS.map(t => `<button class="chip" data-act="addT" data-t="${esc(t)}">+ ${t}</button>`).join('')}<button class="chip" data-act="addRow" data-list="tests">+ Autre test</button></div>
+      ${b.tests.length ? `<div class="tbl"><table><thead><tr><th>Test</th><th>Côté</th><th>Résultat</th><th>Remarque</th><th></th></tr></thead><tbody>
+      ${b.tests.map((r, i) => `<tr><td style="min-width:200px"><div class="tname"><input type="text" data-list="tests" data-i="${i}" data-k="t" value="${esc(r.t)}" placeholder="Nom du test">${TESTINFO[r.t] ? `<button class="info-btn" data-act="infoT" data-t="${esc(r.t)}" aria-label="Signification du test ${esc(r.t)}">i</button>` : ''}</div></td>
+        <td class="num">${rowSel('tests', i, 'cote', ['', 'G', 'D', 'Bilat.'], r.cote)}</td>
+        <td style="min-width:130px">${rowSel('tests', i, 'r', ['', 'Positif', 'Négatif', 'Douteux'], r.r)}</td>
+        <td><input type="text" data-list="tests" data-i="${i}" data-k="note" value="${esc(r.note)}"></td>
+        <td><button class="icon-btn" data-act="delRow" data-list="tests" data-i="${i}" aria-label="Supprimer la ligne">×</button></td></tr>`).join('')}
+      </tbody></table></div>` : `<p class="empty">Aucun test pour l’instant.</p>`}
+      <h2>Scores et échelles</h2>
+      <div class="chips">${SCORES.map(s => `<button class="chip" data-act="addS" data-s="${esc(s)}">+ ${s}</button>`).join('')}<button class="chip" data-act="addRow" data-list="scores">+ Autre score</button></div>
+      ${b.scores.length ? `<div class="tbl"><table style="min-width:420px"><thead><tr><th>Score</th><th>Résultat</th><th></th></tr></thead><tbody>
+      ${b.scores.map((r, i) => {
+        const pr = prev && prev.scores.find(x => x.s === r.s);
+        return `<tr><td><input type="text" data-list="scores" data-i="${i}" data-k="s" value="${esc(r.s)}" placeholder="Nom"></td>
+        <td><input type="text" data-list="scores" data-i="${i}" data-k="v" value="${esc(r.v)}" placeholder="Ex. : 62/100">${pr && pr.v ? `<small style="text-align:left">avant ${esc(pr.v)}</small>` : ''}</td>
+        <td><button class="icon-btn" data-act="delRow" data-list="scores" data-i="${i}" aria-label="Supprimer la ligne">×</button></td></tr>`;
+      }).join('')}</tbody></table></div>` : `<p class="empty">Aucun score pour l’instant.</p>`}
+      <div class="fields" style="margin-top:20px">${fld('Bilan fonctionnel (marche, escaliers, activités quotidiennes…)', 'fonctionnel', 'area', '', true)}</div>`;
+    case 'synthese': return `
+      <div class="fields">${fld('Diagnostic kinésithérapique', 'diagKine', 'area', 'Déficiences, limitations d’activité, restrictions de participation', true)}</div>
+      <div class="fields" style="margin-top:16px">
+        ${fld('Objectifs', 'objectifs', 'area', 'À court et moyen terme', true)}
+      </div>
+      <h2>Conseils pour les séances</h2>
+      <div class="sugg">
+        <p class="hint" style="margin:0 0 12px">Claude propose des priorités, un déroulé de séance, une progression et des précautions à partir de ce bilan. Seules les données cliniques sont envoyées, sans nom ni date de naissance : évitez d’écrire des noms dans les champs texte.</p>
+        <div class="row">
+          <button class="btn primary sm" data-act="conseil" id="conseil-btn">${b.conseil ? 'Refaire une proposition' : 'Obtenir des conseils'}</button>
+          <button class="btn sm" data-act="stopConseil" id="conseil-stop" hidden>Arrêter</button>
+          <button class="btn sm" data-act="conseilToPlan" id="conseil-plan"${b.conseil ? '' : ' hidden'}>Copier dans le plan de traitement</button>
+        </div>
+        <p class="err" id="conseil-err"></p>
+        <div class="conseil-out" id="conseil-out">${b.conseil ? md(b.conseil) : ''}</div>
+        ${b.conseil ? '<p class="hint" style="margin:12px 0 0">Suggestions à confronter à votre jugement clinique.</p>' : ''}
+      </div>
+      <div class="fields" style="margin-top:20px">
+        ${fld('Plan de traitement', 'plan', 'area', 'Techniques envisagées', true)}
+        ${fld('Nombre de séances prévu', 'seances', 'number')}
+      </div>
+      <h2>Conseils donnés au patient</h2>
+      <p class="hint">Choisissez les conseils dans la liste, puis complétez ou modifiez le texte librement.</p>
+      <div class="row" style="margin-bottom:12px"><button class="btn primary sm" data-act="openCP">+ Ajouter des conseils</button></div>
+      <div class="fields">
+        ${fld('Conseils donnés', 'conseilsPatient', 'area', 'Ex. : glaçage, auto-exercices, reprise progressive…', true)}
+        ${fld('Notes', 'notes', 'area', '', true)}
+      </div>`;
+  }
+  return '';
+}
+
+/* ---------- Propositions d’objectifs ---------- */
+const FEM = ['Épaule', 'Hanche', 'Cheville'];
+function deJ(j, side) {
+  const fem = FEM.includes(j), low = j.toLowerCase();
+  const pre = /^[aeiouéèêî]/i.test(low) ? 'de l’' : fem ? 'de la ' : 'du ';
+  const adj = j.startsWith('Rachis') ? '' : ' ' + (side === 'g' ? 'gauche' : fem ? 'droite' : 'droit');
+  return pre + low + adj;
+}
+function suggestObjectifs(b) {
+  const out = [];
+  const add = t => { if (!out.includes(t)) out.push(t); };
+  if (b.evaAct !== '' && +b.evaAct >= 3) add(`Diminuer la douleur à l’activité : EVA ${b.evaAct}/10, objectif ≤ 2/10`);
+  if (b.evaRepos !== '' && +b.evaRepos >= 1) add(`Supprimer la douleur au repos : EVA ${b.evaRepos}/10, objectif 0/10`);
+  b.articulaire.forEach(r => ['g', 'd'].forEach(sd => {
+    if (!isLow(r[sd], r.n)) return;
+    const target = Math.round(+r.n * 0.9 / 5) * 5;
+    const where = NORMES[r.j] ? deJ(r.j, sd) : `${r.j} ${sd === 'g' ? 'gauche' : 'droit(e)'}`.trim();
+    add(`Gagner en ${String(r.m || 'amplitude').toLowerCase()} ${where} : ${r[sd]}°, objectif ≥ ${target}°`);
+  }));
+  b.musculaire.forEach(r => ['g', 'd'].forEach(sd => {
+    if (r[sd] === '' || r[sd] === undefined || +r[sd] >= 5 || !r.m) return;
+    const c = +r[sd], t = c <= 3 ? 4 : 5;
+    add(`Renforcer ${r.m.toLowerCase()} ${sd === 'g' ? 'gauche' : 'droit'} : ${c}/5, objectif ${t}/5`);
+  }));
+  const pos = new Set(b.tests.filter(t => t.r === 'Positif').map(t => t.t));
+  if (['Lachman', 'Tiroir antérieur', 'Tiroir postérieur', 'Valgus forcé', 'Varus forcé'].some(t => pos.has(t))) add('Améliorer la stabilité active du genou : proprioception et contrôle neuromusculaire');
+  if (pos.has('McMurray')) add('Protéger l’interligne méniscal et retrouver une flexion indolore du genou');
+  if (['Neer', 'Hawkins-Kennedy'].some(t => pos.has(t))) add('Diminuer le conflit sous-acromial : recentrage de la tête humérale et contrôle scapulaire');
+  if (['Jobe', 'Patte', 'Belly press'].some(t => pos.has(t))) add('Renforcer la coiffe des rotateurs de façon progressive et indolore');
+  if (['Lasègue', 'Slump', 'Spurling'].some(t => pos.has(t))) add('Diminuer la mécanosensibilité neurale et les irradiations');
+  if (pos.has('Thomas')) add('Gagner en extensibilité des fléchisseurs de hanche');
+  if (pos.has('FABER')) add('Retrouver une mobilité indolore de la hanche et du bassin');
+  if (['Phalen', 'Tinel'].some(t => pos.has(t))) add('Diminuer les paresthésies et protéger le nerf (positions, gestes répétés)');
+  if (b.marks.some(m => m.k === 'paresthesie')) add('Surveiller et réduire les zones de paresthésie');
+  if (b.marks.some(m => m.k === 'raideur')) add('Diminuer la sensation de raideur et retrouver une mobilité fluide');
+  b.scores.filter(r => r.s && r.v).forEach(r => add(`Améliorer le score ${r.s} : actuellement ${r.v}`));
+  if (b.activites) add(`Reprise des activités : ${trunc(b.activites, 70)}`);
+  if (b.attentes) add(`Répondre à l’attente du patient : « ${trunc(b.attentes, 70)} »`);
+  add('Rendre le patient autonome avec un programme d’auto-exercices');
+  add('Éducation thérapeutique : compréhension de la pathologie et gestion de la charge');
+  return out;
+}
+let suggCache = [];
+function renderSugg(b) {
+  const cur = b.objectifs || '';
+  $('#sugg-list').innerHTML = `<div class="sugg-list">${suggCache.map((t, i) => {
+    const done = cur.includes(t);
+    return `<button class="sugg-item${done ? ' done' : ''}" data-act="addObj" data-i="${i}"${done ? ' disabled' : ''}><span class="plus">${done ? '✓' : '+'}</span><span>${esc(t)}</span></button>`;
+  }).join('')}</div>
+  ${suggCache.some(t => !cur.includes(t)) ? `<button class="linkbtn" data-act="addAllObj" style="margin-top:8px">Tout ajouter</button>` : ''}`;
+}
+function appendObj(b, lines) {
+  const cur = (b.objectifs || '').replace(/\s+$/, '');
+  b.objectifs = (cur ? cur + '\n' : '') + lines.map(t => '• ' + t).join('\n');
+  const ta = $('#f-objectifs'); if (ta) ta.value = b.objectifs;
+  saveSoon(); renderSugg(b);
+}
+
+/* ---------- Conseils pour les séances ---------- */
+function zone(m) {
+  const [x, y] = m.pts[Math.floor(m.pts.length / 2)];
+  const back = m.v === 'dos';
+  const right = back ? x > 100 : x < 100;
+  const cote = right ? 'droit(e)' : 'gauche';
+  const mid = Math.abs(x - 100) < 7;
+  let z;
+  if ((x < 64 || x > 136) && y > 84 && y < 275) z = y < 150 ? 'bras' : y < 205 ? 'coude' : y < 245 ? 'avant-bras / poignet' : 'main';
+  else if (y < 62) z = 'tête';
+  else if (y < 84) z = back ? 'rachis cervical' : 'cou';
+  else if (y < 125) z = Math.abs(x - 100) > 22 ? 'épaule' : back ? 'rachis thoracique haut' : 'thorax';
+  else if (y < 180) z = back ? 'rachis thoracique' : 'abdomen';
+  else if (y < 240) z = back ? 'rachis lombaire' : 'aine / bas-ventre';
+  else if (y < 300) z = back ? 'fesse' : 'hanche / cuisse';
+  else if (y < 325) z = back ? 'cuisse postérieure' : 'cuisse';
+  else if (y < 352) z = back ? 'creux poplité' : 'genou';
+  else if (y < 405) z = back ? 'mollet' : 'jambe';
+  else z = 'cheville / pied';
+  const median = mid && !['bras', 'coude', 'avant-bras / poignet', 'main', 'épaule'].includes(z);
+  return `${z}${median ? '' : ' ' + cote} (${back ? 'dos' : 'face'})`;
+}
+function caseText(p, b) {
+  const L = [];
+  const add = (k, v) => { if (v !== '' && v != null && String(v).trim()) L.push(`${k} : ${String(v).trim()}`); };
+  add('Âge', p.naissance ? age(p.naissance) : '');
+  add('Type de bilan', b.type); add('Motif de prise en charge', b.motifType); add('Côté atteint', b.cote);
+  add('Diagnostic médical', b.diagMed); add('Motif et histoire de la maladie', b.motif); add('Antécédents', b.atcd);
+  add('Traitements', b.traitements); add('Imagerie', b.imagerie); add('Activités', b.activites); add('Attentes du patient', b.attentes);
+  add('EVA au repos', b.evaRepos === '' ? '' : b.evaRepos + '/10'); add('EVA à l’activité', b.evaAct === '' ? '' : b.evaAct + '/10');
+  add('Horaire de la douleur', b.horaire); add('Type de douleur', b.douleurType); add('Facteurs aggravants', b.aggravants); add('Facteurs soulageants', b.soulageants);
+  const zs = {}; b.marks.forEach(m => { (zs[MARKS[m.k]] = zs[MARKS[m.k]] || new Set()).add(zone(m)); });
+  Object.entries(zs).forEach(([k, s]) => add(`Zones de ${k.toLowerCase()} sur le schéma`, [...s].join(', ')));
+  const art = b.articulaire.filter(r => r.g !== '' || r.d !== '');
+  if (art.length) L.push('Amplitudes (gauche / droite / norme) :\n' + art.map(r => `- ${r.j} ${r.m} : ${r.g === '' ? '—' : r.g + '°'} / ${r.d === '' ? '—' : r.d + '°'} / ${r.n === '' ? '—' : r.n + '°'}`).join('\n'));
+  add('Observations articulaires', b.obsArt);
+  const mus = b.musculaire.filter(r => r.m && (r.g || r.d));
+  if (mus.length) L.push('Testing musculaire (cotation 0 à 5) :\n' + mus.map(r => `- ${r.m} : G ${r.g || '—'}, D ${r.d || '—'}`).join('\n'));
+  add('Observations musculaires', b.obsMusc);
+  const tests = b.tests.filter(r => r.t && r.r);
+  if (tests.length) L.push('Tests :\n' + tests.map(r => `- ${r.t}${r.cote ? ' (' + r.cote + ')' : ''} : ${r.r}${r.note ? ', ' + r.note : ''}`).join('\n'));
+  const sc = b.scores.filter(r => r.s && r.v);
+  if (sc.length) L.push('Scores :\n' + sc.map(r => `- ${r.s} : ${r.v}`).join('\n'));
+  add('Bilan fonctionnel', b.fonctionnel); add('Diagnostic kinésithérapique', b.diagKine); add('Objectifs fixés', b.objectifs); add('Conseils déjà donnés au patient', b.conseilsPatient); add('Nombre de séances prévu', b.seances);
+  return L;
+}
+const CONSEIL_PROMPT = `Tu es un kinésithérapeute expérimenté qui conseille une consœur. À partir du bilan ci-dessous, aide-la à organiser ses séances.
+
+Structure ta réponse exactement avec ces titres (format « ## Titre ») :
+## Priorités
+## Déroulé type d’une séance
+## Progression
+## Auto-exercices à donner
+## Précautions et signes d’alerte
+## À compléter dans le bilan
+
+Consignes :
+- Sois concret et applicable au cabinet : exercices nommés, position du patient, dosages (séries, répétitions, durée) et temps approximatif de chaque partie de la séance.
+- Dans « Progression », découpe en 2 ou 3 phases avec des critères objectifs pour passer à la suivante.
+- Appuie-toi uniquement sur les données fournies. Si une donnée importante manque, signale-le dans la dernière partie au lieu de l’inventer.
+- Indique les drapeaux rouges qui imposeraient de réorienter vers le médecin.
+- Reste conforme aux recommandations actuelles et aux données probantes, sans citer de références.
+- Listes avec « - », gras avec **…** si utile, pas de tableau. 450 mots maximum, en français.
+
+Bilan :
+`;
+function md(t) {
+  let h = '', inList = false;
+  const inl = s => esc(s).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  String(t).split('\n').forEach(l => {
+    const li = l.match(/^\s*(?:[-*•]|\d+[.)])\s+(.*)/);
+    if (li) { if (!inList) { h += '<ul>'; inList = true; } h += `<li>${inl(li[1])}</li>`; return; }
+    if (inList) { h += '</ul>'; inList = false; }
+    const hd = l.match(/^#{1,4}\s+(.*)/);
+    if (hd) h += `<h3>${inl(hd[1])}</h3>`;
+    else if (l.trim()) h += `<p>${inl(l)}</p>`;
+  });
+  return inList ? h + '</ul>' : h;
+}
+function askSend(L) {
+  return new Promise(res => {
+    const d = $('#sendDlg'); $('#send-data').textContent = L.join('\n');
+    let done = false; const end = v => { if (done) return; done = true; if (d.open) d.close(); res(v); };
+    $('#send-ok').onclick = () => end(true); $('#send-no').onclick = () => end(false); d.oncancel = () => end(false);
+    d.showModal();
+  });
+}
+let conseilCtl = null;
+function conseilButtons(b, busy) {
+  const btn = $('#conseil-btn'), stop = $('#conseil-stop'), plan = $('#conseil-plan');
+  if (!btn || ui.bid !== b.id) return;
+  btn.disabled = busy; btn.textContent = b.conseil ? 'Refaire une proposition' : 'Obtenir des conseils';
+  stop.hidden = !busy; plan.hidden = busy || !b.conseil;
+}
+async function runConseil() {
+  const p = P(), b = B(); if (!b) return;
+  const err = $('#conseil-err');
+  const L = caseText(p, b);
+  if (L.filter(l => !/^(Âge|Type de bilan) :/.test(l)).length < 2) { err.textContent = 'Complétez d’abord le bilan (diagnostic, douleur, mesures…) pour obtenir des conseils utiles.'; return; }
+  if (!(await askSend(L))) return;
+  let sample = null;
+  try { sample = window.claude ? await window.claude.use('sample') : null; } catch (_) {}
+  if (!sample) { err.textContent = 'Les conseils de Claude ne sont disponibles que dans la version claude.ai de l’application.'; return; }
+  err.textContent = '';
+  conseilButtons(b, true);
+  const show = html => { const o = $('#conseil-out'); if (o && ui.bid === b.id) o.innerHTML = html; };
+  show('<p class="thinking">Réflexion en cours, cela peut prendre une minute…</p>');
+  conseilCtl = new AbortController();
+  try {
+    const { text } = await sample(CONSEIL_PROMPT + L.join('\n'), { signal: conseilCtl.signal, modelTier: 'default', cache: false, onText: ({ text }) => show(md(text)) });
+    b.conseil = text; save(); show(md(text));
+  } catch (e) {
+    if (e && e.text) { b.conseil = e.text; save(); show(md(e.text)); } else show(b.conseil ? md(b.conseil) : '');
+    const msg = { cancelled: '', not_granted: 'L’accès à Claude a été refusé pour cette page.', rate_limited: 'Trop de demandes en même temps. Réessayez dans un instant.' }[e && e.code];
+    const er = $('#conseil-err'); if (er && ui.bid === b.id) er.textContent = msg ?? 'La demande n’a pas abouti. Réessayez.';
+  } finally { conseilCtl = null; conseilButtons(b, false); }
+}
+function conseilToPlan(b) {
+  const plain = b.conseil.replace(/\*\*/g, '').replace(/^#+\s*(.*)$/gm, (m, t) => t.toUpperCase());
+  b.plan = (b.plan ? b.plan.replace(/\s+$/, '') + '\n\n' : '') + plain.trim();
+  const ta = $('#f-plan'); if (ta) ta.value = b.plan;
+  save(); setStatus('Conseils copiés dans le plan de traitement.');
+}
+
+/* ---------- Schéma corporel ---------- */
+const HALF = { s: [100, 8], segs: [
+  [113, 8, 121, 18, 121, 34], [121, 46, 118, 55, 112, 61], [110, 64, 109, 68, 110, 73], [115, 78, 125, 80, 135, 83],
+  [146, 86, 151, 95, 152, 108], [153, 124, 155, 140, 157, 156], [159, 170, 163, 186, 165, 200], [167, 215, 169, 228, 170, 240],
+  [174, 247, 176, 257, 173, 265], [170, 272, 163, 271, 161, 264], [160, 256, 160, 249, 159, 243], [156, 226, 151, 206, 148, 192],
+  [145, 170, 141, 142, 137, 117], [136, 140, 131, 160, 129, 177], [128, 194, 134, 210, 136, 228], [138, 242, 138, 258, 136, 274],
+  [134, 300, 131, 320, 129, 338], [128, 350, 131, 362, 130, 378], [129, 394, 125, 404, 124, 414], [128, 420, 134, 425, 133, 430],
+  [128, 435, 114, 435, 110, 431], [108, 425, 110, 419, 110, 412], [109, 398, 108, 384, 108, 368], [107, 352, 108, 342, 107, 332],
+  [106, 310, 104, 288, 102, 272], [101, 266, 100, 264, 100, 262]
+] };
+const SIL = (() => {
+  const pts = [HALF.s]; HALF.segs.forEach(sg => pts.push([sg[4], sg[5]]));
+  const mx = x => 200 - x;
+  let d = `M${HALF.s[0]} ${HALF.s[1]}`;
+  HALF.segs.forEach(sg => d += ` C${sg.join(' ')}`);
+  for (let i = HALF.segs.length - 1; i >= 0; i--) { const sg = HALF.segs[i], st = pts[i]; d += ` C${mx(sg[2])} ${sg[3]} ${mx(sg[0])} ${sg[1]} ${mx(st[0])} ${st[1]}`; }
+  return d + ' Z';
+})();
+const mirror = d => d.replace(/(-?\d+(?:\.\d+)?) (-?\d+(?:\.\d+)?)/g, (m, x, y) => `${200 - +x} ${y}`);
+const both = d => `<path class="detail" d="${d}"/><path class="detail" d="${mirror(d)}"/>`;
+const DETAIL = {
+  face: both('M84 87 Q92 92 99 90') + both('M80 116 Q90 125 99 121') + both('M131 222 Q118 240 104 258') + both('M114 333 Q120 339 126 333') + both('M123 46 Q125 40 122 34')
+    + '<path class="detail dash" d="M100 96 L100 168"/><circle class="detail" cx="100" cy="182" r="1.8"/>',
+  dos: '<path class="detail dash" d="M100 72 L100 228"/>' + both('M108 102 Q120 101 122 110 Q120 122 110 126') + both('M101 262 Q116 270 133 262')
+    + '<path class="detail" d="M100 228 L100 260"/>' + both('M112 342 Q120 337 128 342') + both('M120 160 Q124 172 124 186')
+};
+function markSVG(m) {
+  if (m.pts.length < 2) return `<circle class="mk-dot k-${m.k}" cx="${m.pts[0][0]}" cy="${m.pts[0][1]}" r="7"/>`;
+  return `<path class="mk-line k-${m.k}" d="M${m.pts.map(p => p.join(' ')).join(' L')}"/>`;
+}
+function figure(v, marks, edit) {
+  return `<svg class="fig${edit ? ' edit' : ''}" data-v="${v}" viewBox="0 0 200 440" role="img" aria-label="Silhouette ${v === 'face' ? 'de face' : 'de dos'}">
+    <path class="sil" d="${SIL}"/>${DETAIL[v]}
+    <text class="side-l" x="8" y="436">${v === 'face' ? 'D' : 'G'}</text><text class="side-l" x="192" y="436" text-anchor="end">${v === 'face' ? 'G' : 'D'}</text>
+    <g class="marks">${marks.filter(m => m.v === v).map(markSVG).join('')}</g>
+  </svg>`;
+}
+function bodyZone(marks, edit) {
+  return `<div class="bodyzone"><div class="figwrap">${figure('face', marks, edit)}<p>Face</p></div><div class="figwrap">${figure('dos', marks, edit)}<p>Dos</p></div></div>`;
+}
+function svgPt(svg, e) {
+  const pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY;
+  const p = pt.matrixTransform(svg.getScreenCTM().inverse());
+  return [Math.round(p.x * 10) / 10, Math.round(p.y * 10) / 10];
+}
+function redrawMarks(svg) { const b = B(); svg.querySelector('.marks').innerHTML = b.marks.filter(m => m.v === svg.dataset.v).map(markSVG).join(''); }
+function eraseAt(svg, p) {
+  const b = B(); const v = svg.dataset.v;
+  const i = b.marks.findIndex(m => m.v === v && m.pts.some(q => Math.hypot(q[0] - p[0], q[1] - p[1]) < 9));
+  if (i >= 0) { b.marks.splice(i, 1); redrawMarks(svg); saveSoon(); }
+}
+let drawing = null;
+document.addEventListener('pointerdown', e => {
+  const svg = e.target.closest && e.target.closest('svg.fig.edit'); if (!svg || !B()) return;
+  e.preventDefault();
+  const p = svgPt(svg, e);
+  try { svg.setPointerCapture(e.pointerId); } catch (_) {}
+  if (ui.tool === 'gomme') { drawing = { svg, erase: true }; eraseAt(svg, p); return; }
+  const m = { v: svg.dataset.v, k: ui.tool, pts: [p] };
+  B().marks.push(m); drawing = { svg, m }; redrawMarks(svg);
+});
+document.addEventListener('pointermove', e => {
+  if (!drawing) return;
+  e.preventDefault();
+  const p = svgPt(drawing.svg, e);
+  if (drawing.erase) { eraseAt(drawing.svg, p); return; }
+  const pts = drawing.m.pts, last = pts[pts.length - 1];
+  if (Math.hypot(p[0] - last[0], p[1] - last[1]) > 1.6) { pts.push(p); redrawMarks(drawing.svg); }
+}, { passive: false });
+function endDraw() {
+  if (!drawing) return;
+  if (drawing.m) {
+    const pts = drawing.m.pts;
+    const len = pts.reduce((s, p, i) => i ? s + Math.hypot(p[0] - pts[i - 1][0], p[1] - pts[i - 1][1]) : 0, 0);
+    if (len < 4) drawing.m.pts = [pts[0]];
+    redrawMarks(drawing.svg); saveSoon();
+  }
+  drawing = null;
+}
+document.addEventListener('pointerup', endDraw);
+document.addEventListener('pointercancel', endDraw);
+
+/* ---------- Croquis des tests ---------- */
+const sL = (x1, y1, x2, y2, c = 'sk-p') => `<line class="${c}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`;
+const sHd = (x, y, r = 11) => `<circle class="sk-hd" cx="${x}" cy="${y}" r="${r}"/>`;
+const sTbl = (x1 = 8, x2 = 232, y = 117) => `<line class="sk-t" x1="${x1}" y1="${y}" x2="${x2}" y2="${y}"/>`;
+const sH = (x, y, r = 0) => `<ellipse class="sk-h" cx="${x}" cy="${y}" rx="9" ry="6" transform="rotate(${r} ${x} ${y})"/>`;
+const sA = (x1, y1, x2, y2) => `<line class="sk-a" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" marker-end="url(#ah)"/>`;
+const sC = d => `<path class="sk-a" d="${d}" marker-end="url(#ah)"/>`;
+const sG = d => `<path class="sk-g" d="${d}"/>`;
+const sZ = d => `<path class="sk-z" d="${d}"/>`;
+const sT = (x, y, t, a = 'middle') => `<text class="sk-l" x="${x}" y="${y}" text-anchor="${a}">${t}</text>`;
+const SUP = sTbl() + sHd(26, 99) + sL(40, 106, 110, 106);
+const STAND = sHd(95, 28) + sL(95, 44, 95, 106) + sL(95, 106, 88, 150) + sL(95, 106, 104, 150);
+const FRONT = sHd(120, 24) + sL(120, 40, 120, 100) + sL(120, 100, 111, 140) + sL(120, 100, 129, 140);
+const SKETCH = {
+  'Lachman': SUP + sL(110, 106, 158, 90) + sL(158, 90, 206, 108) + sH(138, 92, -18) + sH(182, 94, 20) + sA(182, 86, 182, 58)
+    + sT(120, 22, 'genou fléchi à 20–30°') + sT(196, 50, 'tibia vers l’avant'),
+  'Tiroir antérieur': SUP + sL(110, 106, 148, 62) + sL(148, 62, 168, 108) + sL(168, 110, 184, 110) + sH(182, 104) + sH(160, 82, 68) + sA(170, 82, 202, 82)
+    + sT(120, 22, 'genou à 90°, pied stabilisé') + sT(212, 70, 'tibia tiré') + sT(212, 100, 'en avant'),
+  'Tiroir postérieur': SUP + sL(110, 106, 148, 62) + sL(148, 62, 168, 108) + sL(168, 110, 184, 110) + sH(182, 104) + sH(162, 76, 68) + sA(206, 76, 176, 76)
+    + sT(120, 22, 'genou à 90°') + sT(212, 64, 'tibia poussé') + sT(212, 94, 'en arrière'),
+  'Valgus forcé': sL(120, 14, 120, 76) + sL(120, 84, 120, 138) + sG('M106 70 L98 80 L106 90') + sH(138, 80) + sA(172, 80, 150, 80) + sH(102, 132) + sA(66, 132, 90, 132)
+    + sT(40, 20, 'médial') + sT(200, 20, 'latéral') + sT(92, 84, 'bâillement', 'end') + sT(120, 158, 'à 0° puis à 30° de flexion'),
+  'Varus forcé': sL(120, 14, 120, 76) + sL(120, 84, 120, 138) + sG('M134 70 L142 80 L134 90') + sH(102, 80) + sA(68, 80, 90, 80) + sH(138, 132) + sA(174, 132, 150, 132)
+    + sT(40, 20, 'médial') + sT(200, 20, 'latéral') + sT(148, 84, 'bâillement', 'start') + sT(120, 158, 'à 0° puis à 30° de flexion'),
+  'McMurray': SUP + sL(110, 106, 140, 58) + sL(140, 58, 120, 98) + sH(140, 50) + sH(118, 104) + sC('M100 92 A14 14 0 1 1 108 116')
+    + sC('M150 72 Q190 66 214 104') + sT(84, 72, 'rotation') + sT(196, 60, 'puis extension'),
+  'Neer': STAND + sL(97, 52, 122, 8) + sH(83, 60, 90) + sC('M138 84 Q152 44 132 14') + sT(156, 56, 'élévation passive', 'start') + sT(156, 68, 'en rotation interne', 'start') + sT(50, 88, 'scapula fixée'),
+  'Hawkins-Kennedy': STAND + sL(97, 54, 142, 54) + sL(142, 54, 142, 20) + sH(142, 62) + sC('M150 16 Q178 26 166 52') + sT(120, 104, 'épaule et coude à 90°', 'start') + sT(198, 36, 'rotation'),
+  'Jobe': FRONT + sL(120, 50, 64, 60) + sL(120, 50, 176, 60) + sA(64, 22, 64, 48) + sA(176, 22, 176, 48) + sT(120, 158, 'bras à 90°, pouces vers le bas') + sT(64, 14, 'résistance') + sT(176, 14, 'résistance'),
+  'Patte': FRONT + sL(120, 50, 94, 96) + sL(120, 50, 170, 50) + sL(170, 50, 170, 16) + sH(178, 18, 90) + sC('M184 40 Q208 30 196 8') + sT(196, 100, 'rotation externe') + sT(196, 112, 'contre résistance'),
+  'Belly press': STAND + sL(97, 52, 126, 78) + sL(126, 78, 106, 86) + sA(150, 96, 112, 88) + sA(130, 66, 156, 58) + sT(176, 50, 'coude en avant') + sT(172, 110, 'pousse contre le ventre'),
+  'Lasègue': SUP + sL(110, 110, 206, 111) + sL(110, 104, 190, 46) + sH(194, 42, -36) + sG('M155 106 A45 45 0 0 0 146 80') + sT(168, 96, '30–70°') + sC('M214 82 Q222 56 204 34') + sT(120, 20, 'jambe tendue, élévation passive'),
+  'Slump': sTbl(30, 150, 112) + `<path class="sk-p" d="M92 102 Q76 68 104 46"/>` + sHd(118, 52) + sL(92, 102, 140, 102) + sL(140, 102, 188, 88) + sL(188, 88, 186, 72)
+    + sC('M148 128 Q186 128 200 104') + sC('M132 32 Q142 46 134 62') + sT(156, 22, 'flexion cervicale') + sT(186, 146, 'extension du genou'),
+  'Thomas': sTbl(8, 160) + sHd(26, 99) + sL(40, 106, 110, 106) + sL(110, 106, 86, 66) + sL(86, 66, 62, 90) + sL(110, 108, 158, 108) + sL(158, 108, 160, 150)
+    + sG('M110 104 L156 84 L164 126') + sT(80, 40, 'genou opposé contre la poitrine') + sT(200, 78, 'positif si la') + sT(200, 90, 'cuisse décolle'),
+  'FABER': SUP + sL(110, 110, 206, 111) + sL(110, 104, 150, 70) + sL(150, 70, 168, 106) + sA(150, 32, 150, 58) + sH(96, 98) + sA(96, 62, 96, 88)
+    + sT(196, 50, 'jambe en « 4 »') + sT(150, 24, 'pression sur le genou') + sT(70, 54, 'bassin opposé'),
+  'Spurling': sL(84, 76, 156, 76) + sL(120, 76, 120, 150) + sL(84, 76, 78, 140) + sL(156, 76, 168, 140) + sL(120, 62, 120, 74) + sHd(130, 44, 14) + sH(130, 24) + sA(130, 0, 130, 16)
+    + sZ('M164 92 l8 6 -8 6 8 6 -8 6 8 6') + sT(190, 40, 'extension,') + sT(190, 52, 'inclinaison,') + sT(190, 64, 'rotation') + sT(54, 30, 'compression'),
+  'Phalen': sL(24, 62, 110, 62) + sL(216, 62, 130, 62) + sL(110, 62, 116, 114) + sL(130, 62, 124, 114) + sZ('M104 98 l-6 6 6 6 -6 6') + sZ('M136 98 l6 6 -6 6 6 6')
+    + sT(120, 24, 'dos des mains l’un contre l’autre') + sT(120, 146, 'flexion maximale, 60 secondes'),
+  'Tinel': sL(24, 96, 150, 96) + sL(150, 96, 206, 104) + `<line class="sk-ham" x1="160" y1="22" x2="132" y2="64"/><ellipse class="sk-h" cx="128" cy="72" rx="12" ry="6" transform="rotate(-56 128 72)"/>`
+    + sZ('M122 84 l-4 -4 M134 84 l4 -4 M128 82 l0 -6') + sZ('M160 112 l8 4 -8 4 8 4 -8 4') + sT(80, 128, 'percussion sur le trajet du nerf') + sT(200, 136, 'fourmillements')
+};
+function sketchSVG(t) {
+  const b = SKETCH[t]; if (!b) return '';
+  return `<svg class="sketch" viewBox="0 0 240 160" role="img" aria-label="Croquis du test ${esc(t)}"><defs><marker id="ah" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4.5" markerHeight="4.5" orient="auto-start-reverse"><path class="sk-mk" d="M0 0 L10 5 L0 10 z"/></marker></defs>${b}</svg>`;
+}
+
+/* ---------- Motifs de prise en charge ---------- */
+const MOTIFS = {
+  'Lombalgie': { j: ['Rachis lombaire'], m: ['Psoas', 'Grand fessier', 'Moyen fessier', 'Ischio-jambiers'], t: ['Lasègue', 'Slump', 'FABER', 'Thomas'], s: ['Oswestry'] },
+  'Cervicalgie': { j: ['Rachis cervical'], m: ['Trapèze supérieur', 'Fléchisseurs profonds du cou'], t: ['Spurling'], s: ['NDI'] },
+  'Épaule douloureuse': { j: ['Épaule'], m: ['Deltoïde', 'Supra-épineux', 'Infra-épineux', 'Sub-scapulaire'], t: ['Neer', 'Hawkins-Kennedy', 'Jobe', 'Patte', 'Belly press'], s: ['Quick-DASH'] },
+  'Coude, épicondylalgie': { j: ['Coude', 'Poignet'], m: ['Extenseurs du poignet', 'Fléchisseurs du poignet', 'Biceps brachial', 'Triceps brachial'], t: [], s: ['Quick-DASH'] },
+  'Poignet, canal carpien': { j: ['Poignet'], m: ['Fléchisseurs du poignet', 'Extenseurs du poignet'], t: ['Phalen', 'Tinel'], s: ['Quick-DASH'] },
+  'Hanche douloureuse': { j: ['Hanche'], m: ['Moyen fessier', 'Grand fessier', 'Psoas', 'Adducteurs'], t: ['FABER', 'Thomas'], s: [] },
+  'Prothèse de hanche': { j: ['Hanche'], m: ['Moyen fessier', 'Grand fessier', 'Psoas', 'Quadriceps'], t: [], s: ['Timed Up and Go'] },
+  'Genou, ligament croisé': { j: ['Genou'], m: ['Quadriceps', 'Ischio-jambiers', 'Triceps sural'], t: ['Lachman', 'Tiroir antérieur', 'Tiroir postérieur', 'Valgus forcé', 'Varus forcé'], s: ['KOOS', 'IKDC', 'Lysholm'] },
+  'Genou douloureux, ménisque': { j: ['Genou'], m: ['Quadriceps', 'Ischio-jambiers'], t: ['McMurray', 'Valgus forcé', 'Varus forcé'], s: ['KOOS'] },
+  'Prothèse de genou': { j: ['Genou'], m: ['Quadriceps', 'Ischio-jambiers'], t: [], s: ['KOOS', 'Timed Up and Go'] },
+  'Entorse de cheville': { j: ['Cheville'], m: ['Triceps sural', 'Tibial antérieur', 'Fibulaires'], t: ['Tiroir antérieur'], s: ['CAIT'] },
+  'Équilibre, prévention des chutes': { j: ['Cheville'], m: ['Quadriceps', 'Moyen fessier', 'Triceps sural', 'Tibial antérieur'], t: [], s: ['Tinetti', 'Berg', 'Timed Up and Go'] },
+  'Autre': { j: [], m: [], t: [], s: [] }
+};
+const COTES_ATT = ['Gauche', 'Droit', 'Les deux', 'Sans objet'];
+let mtSel = null;
+function openMotif() {
+  mtSel = null;
+  $('#mt-list').innerHTML = Object.keys(MOTIFS).map(k => `<button class="chip" data-act="mtPick" data-k="${esc(k)}">${k}</button>`).join('');
+  $('#mt-detail').innerHTML = '<p class="hint" style="margin:8px 0 0">Choisissez le motif : les mesures, tests et scores correspondants seront ajoutés au bilan.</p>';
+  $('#mt-ok').disabled = true;
+  $('#motifDlg').showModal();
+}
+function renderMotif() {
+  document.querySelectorAll('#mt-list .chip').forEach(c => c.classList.toggle('on', c.dataset.k === mtSel.motif));
+  const sec = (title, key, items) => items.length ? `<div class="mt-sec"><h3>${title}</h3><div class="chips">${items.map(x => `<button class="chip${mtSel[key].has(x) ? ' on' : ''}" data-act="mtToggle" data-g="${key}" data-x="${esc(x)}">${x}</button>`).join('')}</div></div>` : '';
+  const t = MOTIFS[mtSel.motif];
+  $('#mt-detail').innerHTML = `<div class="mt-sec"><h3>Côté atteint</h3><div class="chips">${COTES_ATT.map(c => `<button class="chip${mtSel.cote === c ? ' on' : ''}" data-act="mtCote" data-c="${c}">${c}</button>`).join('')}</div></div>
+    ${sec('Bilan articulaire', 'j', t.j)}${sec('Testing musculaire', 'm', t.m)}${sec('Tests spécifiques', 't', t.t)}${sec('Scores', 's', t.s)}
+    <p class="hint" style="margin:12px 0 0">${mtSel.motif === 'Autre' ? 'Le bilan sera vide : vous ajouterez les mesures au fil de l’examen.' : 'Touchez un élément pour le retirer. Vous pourrez toujours en ajouter ou en retirer dans le bilan.'}</p>`;
+}
+function applyMotif(b, sel) {
+  b.motifType = sel.motif; b.cote = sel.cote || '';
+  if (sel.motif !== 'Autre') b.diagMed = sel.motif + (sel.cote === 'Gauche' ? ', côté gauche' : sel.cote === 'Droit' ? ', côté droit' : sel.cote === 'Les deux' ? ', bilatéral' : '');
+  const tc = sel.cote === 'Gauche' ? 'G' : sel.cote === 'Droit' ? 'D' : sel.cote === 'Les deux' ? 'Bilat.' : '';
+  const t = MOTIFS[sel.motif];
+  t.j.filter(x => sel.j.has(x)).forEach(j => Object.entries(NORMES[j]).forEach(([m, n]) => b.articulaire.push({ j, m, g: '', d: '', n })));
+  t.m.filter(x => sel.m.has(x)).forEach(m => b.musculaire.push({ m, g: '', d: '' }));
+  t.t.filter(x => sel.t.has(x)).forEach(x => b.tests.push({ t: x, cote: tc, r: '', note: '' }));
+  t.s.filter(x => sel.s.has(x)).forEach(s => b.scores.push({ s, v: '' }));
+}
+
+/* ---------- Goniomètre ---------- */
+let angSel = null;
+const r5 = v => Math.round(v / 5) * 5;
+function angRange(r) {
+  const n = r.n === '' || r.n == null ? null : +r.n;
+  if (n === 0) return [-30, 20];
+  if (!n) return [0, 180];
+  return [0, Math.max(30, Math.ceil(n * 1.25 / 10) * 10)];
+}
+function openAngle(i, k) {
+  const b = B(), r = b.articulaire[i]; if (!r) return;
+  const [lo, hi] = angRange(r);
+  const prev = prevBilan(), pr = prev && prev.articulaire.find(x => x.j === r.j && x.m === r.m);
+  const n = r.n === '' || r.n == null ? null : +r.n;
+  const has = r[k] !== '' && r[k] != null;
+  angSel = { i, k, lo, hi, n, v: has ? +r[k] : (n != null ? n : 0), prev: pr && pr[k] !== '' && pr[k] != null ? +pr[k] : null };
+  $('#ang-title').textContent = `${r.j || 'Articulation'} : ${String(r.m || 'mouvement').toLowerCase()}`;
+  $('#ang-sub').textContent = (k === 'g' ? 'Côté gauche' : 'Côté droit') + (n != null ? `, norme ${n}°` : '') + (n === 0 ? '. Valeur négative : déficit d’extension.' : '');
+  const rg = $('#ang-range'); rg.min = lo; rg.max = hi;
+  const q = n === 0 ? [-20, -10, -5, 0, 5, 10] : n ? [...new Set([r5(n * 0.25), r5(n * 0.5), r5(n * 0.75), n])] : [30, 60, 90, 120, 150, 180];
+  $('#ang-quick').innerHTML = q.map(v => `<button class="chip" data-act="angSet" data-v="${v}">${v}°${v === n ? ' (norme)' : ''}</button>`).join('')
+    + (angSel.prev != null ? `<button class="chip" data-act="angSet" data-v="${angSel.prev}">Comme avant : ${angSel.prev}°</button>` : '');
+  drawAng();
+  $('#angDlg').showModal();
+}
+function drawAng() {
+  const s = angSel, v = Math.max(s.lo, Math.min(s.hi, Math.round(s.v))); s.v = v;
+  $('#ang-num').textContent = v; $('#ang-range').value = v;
+  const cx = 120, cy = 120, R = 92;
+  const P = (a, rr = R) => [cx + rr * Math.cos(a * Math.PI / 180), cy - rr * Math.sin(a * Math.PI / 180)].map(x => Math.round(x * 10) / 10);
+  const vb = s.hi > 180 ? '0 0 240 226' : s.lo < 0 ? '90 70 155 112' : s.hi <= 90 ? '90 12 155 124' : '0 0 240 134';
+  const svg = $('#ang-svg'); svg.setAttribute('viewBox', vb);
+  const step = s.hi - s.lo <= 60 ? 10 : 30;
+  const track = `<path class="ang-track" d="M${P(s.lo).join(' ')} A${R} ${R} 0 ${s.hi - s.lo > 180 ? 1 : 0} 0 ${P(s.hi).join(' ')}"/>`;
+  const ticks = []; for (let a = Math.ceil(s.lo / step) * step; a <= s.hi; a += step) { const [x1, y1] = P(a, R - 6), [x2, y2] = P(a, R + 4), [tx, ty] = P(a, R + 16); ticks.push(`<line class="ang-tick" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/><text class="sk-l" x="${tx}" y="${ty + 3}" text-anchor="middle">${a}°</text>`); }
+  const [ax, ay] = P(v), [kx, ky] = P(v, R + 2);
+  const arc = v === 0 ? '' : `<path class="ang-arc" d="M${cx} ${cy} L${P(0).join(' ')} A${R} ${R} 0 ${Math.abs(v) > 180 ? 1 : 0} ${v > 0 ? 0 : 1} ${ax} ${ay} Z"/>`;
+  const norm = s.n != null ? (() => { const [x1, y1] = P(s.n, R - 14), [x2, y2] = P(s.n, R + 8); return `<line class="ang-norm" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`; })() : '';
+  const prv = s.prev != null ? (() => { const [x, y] = P(s.prev, R - 10); return `<circle class="ang-prev" cx="${x}" cy="${y}" r="4"/>`; })() : '';
+  svg.innerHTML = `${track}${arc}${ticks.join('')}<line class="ang-fix" x1="${cx}" y1="${cy}" x2="${P(0, R + 8)[0]}" y2="${cy}"/>${norm}${prv}
+    <line class="ang-arm" x1="${cx}" y1="${cy}" x2="${ax}" y2="${ay}"/><circle class="ang-hub" cx="${cx}" cy="${cy}" r="6"/><circle class="ang-knob" cx="${kx}" cy="${ky}" r="11"/>`;
+}
+function angFromPointer(e) {
+  const p = svgPt($('#ang-svg'), e);
+  let a = Math.atan2(120 - p[1], p[0] - 120) * 180 / Math.PI;
+  if (a < -90) a += 360;
+  angSel.v = a; drawAng();
+}
+let angDrag = false;
+function setupAngle() {
+  const svg = $('#ang-svg');
+  svg.addEventListener('pointerdown', e => { if (!angSel) return; e.preventDefault(); angDrag = true; try { svg.setPointerCapture(e.pointerId); } catch (_) {} angFromPointer(e); });
+  svg.addEventListener('pointermove', e => { if (angDrag) { e.preventDefault(); angFromPointer(e); } });
+  ['pointerup', 'pointercancel'].forEach(ev => svg.addEventListener(ev, () => { angDrag = false; }));
+  $('#ang-range').addEventListener('input', e => { angSel.v = +e.target.value; drawAng(); });
+}
+function commitAngle(val) {
+  const b = B(), s = angSel; if (!b || !s) return;
+  const r = b.articulaire[s.i]; r[s.k] = val;
+  const inp = document.querySelector(`input[data-list="articulaire"][data-i="${s.i}"][data-k="${s.k}"]`);
+  if (inp) { inp.value = val; const tr = inp.closest('tr'); tr.querySelectorAll('td[data-c]').forEach(td => td.classList.toggle('low', isLow(r[td.dataset.c], r.n))); }
+  saveSoon(); $('#angDlg').close(); angSel = null;
+}
+
+/* ---------- Dialogues ---------- */
+function askConfirm(msg, ok = 'Supprimer') {
+  return new Promise(res => {
+    const d = $('#cfm'); $('#cfm-msg').textContent = msg; $('#cfm-ok').textContent = ok;
+    let settled = false;
+    const done = v => { if (settled) return; settled = true; if (d.open) d.close(); res(v); };
+    $('#cfm-ok').onclick = () => done(true); $('#cfm-no').onclick = () => done(false);
+    d.oncancel = () => done(false);
+    d.showModal();
+  });
+}
+function showInfo(html) { $('#info-body').innerHTML = html; $('#info').showModal(); }
+function infoTest(t) {
+  const x = TESTINFO[t]; if (!x) return;
+  showInfo(`<h2>${esc(t)}</h2><p class="sub">${esc(x.z)}</p>
+    <div class="info-grid">
+      <div>${sketchSVG(t)}<p class="sk-leg"><i style="background:var(--accent)"></i>patient <i style="background:var(--raid)"></i>mains du praticien <i style="background:var(--pain)"></i>force ou mouvement</p></div>
+      <div><dl style="margin-top:-12px">
+        <dt>Ce qu’il recherche</dt><dd>${esc(x.but)}</dd>
+        <dt>Réalisation</dt><dd>${esc(x.how)}</dd>
+        <dt>Test positif si</dt><dd>${esc(x.pos)}</dd></dl>
+      <p class="note">Aide-mémoire : un test isolé ne pose pas de diagnostic, il s’interprète avec l’ensemble du tableau clinique et en comparaison avec le côté sain.</p></div>
+    </div>`);
+}
+function infoMRC() {
+  showInfo(`<h2>Cotation musculaire</h2><p class="sub">Échelle de 0 à 5 (MRC)</p><dl>
+    <dt>0</dt><dd>Aucune contraction visible ni palpable.</dd>
+    <dt>1</dt><dd>Contraction palpable ou visible, sans mouvement.</dd>
+    <dt>2</dt><dd>Mouvement complet sans pesanteur.</dd>
+    <dt>3</dt><dd>Mouvement complet contre la pesanteur, sans résistance.</dd>
+    <dt>4</dt><dd>Mouvement complet contre une résistance modérée.</dd>
+    <dt>5</dt><dd>Force normale, comparable au côté sain.</dd></dl>`);
+}
+const PF = ['nom', 'prenom', 'naissance', 'tel', 'notes'];
+function parseDN(t) {
+  t = String(t || '').trim();
+  const m = t.match(/^(\d{1,2})[\/.\- ](\d{1,2})[\/.\- ](\d{2}|\d{4})$/) || t.match(/^(\d{2})(\d{2})(\d{4})$/);
+  if (!m) return null;
+  let j = +m[1], mo = +m[2], y = +m[3];
+  if (m[3].length === 2) { const cy = new Date().getFullYear() % 100; y += y > cy ? 1900 : 2000; }
+  const d = new Date(y, mo - 1, j);
+  if (d.getFullYear() !== y || d.getMonth() !== mo - 1 || d.getDate() !== j || d > new Date() || y < 1900) return null;
+  return `${y}-${pad(mo)}-${pad(j)}`;
+}
+function showPdAge(final) {
+  const el = $('#pd-naissance'), digits = el.value.replace(/\D/g, '');
+  const iso = (final || digits.length === 8) ? parseDN(el.value) : null;
+  $('#pd-age').textContent = iso ? age(iso) : (final && el.value.trim() ? 'Date non reconnue' : '');
+}
+$('#pd-naissance').addEventListener('input', e => {
+  const el = e.target;
+  if (e.inputType && e.inputType.startsWith('delete')) { showPdAge(); return; }
+  const digits = el.value.replace(/\D/g, '').slice(0, 8);
+  let out = digits.slice(0, 2);
+  if (digits.length > 2) out += '/' + digits.slice(2, 4);
+  if (digits.length > 4) out += '/' + digits.slice(4);
+  if (digits.length === 2 || digits.length === 4) out += '/';
+  el.value = out; showPdAge();
+});
+$('#pd-naissance').addEventListener('blur', () => showPdAge(true));
+function openPDlg(p) {
+  const d = $('#pdlg');
+  $('#pd-title').textContent = p ? 'Modifier la fiche' : 'Nouveau patient';
+  PF.forEach(k => $('#pd-' + k).value = p ? (p[k] || '') : '');
+  $('#pd-naissance').value = p && p.naissance ? fdate(p.naissance) : ''; showPdAge(true);
+  $('#pd-err').textContent = '';
+  d.dataset.id = p ? p.id : '';
+  d.showModal();
+}
+function savePDlg() {
+  const d = $('#pdlg');
+  const v = {}; PF.forEach(k => v[k] = $('#pd-' + k).value.trim());
+  if (v.naissance) {
+    const iso = parseDN(v.naissance);
+    if (!iso) { $('#pd-err').textContent = 'Date de naissance non reconnue : tapez-la sous la forme JJ/MM/AAAA.'; $('#pd-naissance').focus(); return; }
+    v.naissance = iso;
+  }
+  if (!v.nom) { $('#pd-err').textContent = 'Indiquez au moins le nom du patient.'; $('#pd-nom').focus(); return; }
+  if (d.dataset.id) { Object.assign(S.patients.find(p => p.id === d.dataset.id), v); }
+  else { const p = { id: uid(), ...v, bilans: [], seances: [] }; S.patients.push(p); ui.pid = p.id; ui.bid = null; ui.sid = null; }
+  d.close(); save(); renderSide(); renderMain();
+}
+
+/* ---------- Exports ---------- */
+const REPORT_CSS = `body{font-family:"Helvetica Neue",Arial,sans-serif;color:#16252A;max-width:760px;margin:32px auto;padding:0 20px;line-height:1.5;font-size:14px}
+h1{font-size:24px;margin:0}h2{font-size:17px;border-bottom:2px solid #2E6B5E;padding-bottom:4px;margin:26px 0 10px;color:#2E6B5E}
+h3{font-size:13px;margin:12px 0 2px;color:#5A6B70}p{margin:0 0 6px;white-space:pre-wrap}
+.meta{color:#5A6B70;margin:4px 0 0}table{border-collapse:collapse;width:100%;margin:6px 0 10px}
+th,td{border:1px solid #D2DDD9;padding:6px 8px;text-align:left;vertical-align:top}th{background:#EEF4F1;font-size:12px}
+.figs{display:flex;gap:16px;max-width:380px}.figs div{flex:1;text-align:center;font-size:12px;color:#5A6B70}
+svg{width:100%;height:auto}.sil{fill:#EEF3F1;stroke:#A6BAB3;stroke-width:1.4}.detail{fill:none;stroke:#A6BAB3;stroke-width:1.1}.dash{stroke-dasharray:3 4}
+.side-l{font-size:13px;fill:#5A6B70}.mk-dot{stroke:#fff;stroke-width:2}.mk-line{fill:none;stroke-width:5;stroke-linecap:round;stroke-linejoin:round;opacity:.75}
+.mk-dot.k-douleur{fill:#C2412F}.mk-dot.k-paresthesie{fill:#4F55C2}.mk-dot.k-raideur{fill:#A96C12}
+.mk-line.k-douleur{stroke:#C2412F}.mk-line.k-paresthesie{stroke:#4F55C2}.mk-line.k-raideur{stroke:#A96C12}
+.leg span{display:inline-block;width:10px;height:10px;border-radius:50%;margin:0 4px 0 12px}`;
+function reportHTML(p, b) {
+  const t = (label, v) => v ? `<h3>${label}</h3><p>${esc(v)}</p>` : '';
+  const table = (head, rows) => rows.length ? `<table><thead><tr>${head.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.map(r => `<tr>${r.map(c => `<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table>` : '';
+  const art = b.articulaire.filter(r => r.g !== '' || r.d !== '');
+  const mus = b.musculaire.filter(r => r.g || r.d);
+  const tests = b.tests.filter(r => r.r || r.note);
+  const scores = b.scores.filter(r => r.v);
+  return `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${esc(bTitle(b))} – ${esc(pName(p))}</title><style>${REPORT_CSS}</style></head><body>
+<h1>${esc(bTitle(b))}</h1>
+<p class="meta">${esc(pName(p))}${p.naissance ? `, né(e) le ${fdate(p.naissance)} (${age(p.naissance)})` : ''}${b.prescripteur ? `. Prescripteur : ${esc(b.prescripteur)}` : ''}</p>
+<h2>Anamnèse</h2>
+${t('Diagnostic médical', b.diagMed)}${t('Motif et histoire de la maladie', b.motif)}${t('Antécédents', b.atcd)}${t('Traitements', b.traitements)}${t('Imagerie et examens', b.imagerie)}${t('Activités', b.activites)}${t('Attentes du patient', b.attentes)}
+<h2>Douleur</h2>
+<p>EVA au repos : ${b.evaRepos === '' ? 'non évaluée' : b.evaRepos + '/10'}. EVA à l’activité : ${b.evaAct === '' ? 'non évaluée' : b.evaAct + '/10'}.${b.horaire ? ` Horaire ${esc(b.horaire.toLowerCase())}.` : ''}</p>
+${t('Type de douleur', b.douleurType)}${t('Facteurs aggravants', b.aggravants)}${t('Facteurs soulageants', b.soulageants)}
+${b.marks.length ? `<div class="figs"><div>${figure('face', b.marks)}Face</div><div>${figure('dos', b.marks)}Dos</div></div>
+<p class="leg"><span style="background:#C2412F"></span>Douleur<span style="background:#4F55C2"></span>Paresthésie<span style="background:#A96C12"></span>Raideur</p>` : ''}
+${art.length || b.obsArt ? `<h2>Bilan articulaire</h2>${table(['Mouvement', 'Gauche', 'Droite', 'Norme'], art.map(r => [`${r.j} – ${r.m}`, r.g !== '' ? r.g + '°' : '', r.d !== '' ? r.d + '°' : '', r.n !== '' ? r.n + '°' : '']))}${t('Observations', b.obsArt)}` : ''}
+${mus.length || b.obsMusc ? `<h2>Bilan musculaire</h2>${table(['Muscle', 'Gauche', 'Droite'], mus.map(r => [r.m, r.g, r.d]))}${t('Observations', b.obsMusc)}` : ''}
+${tests.length || scores.length || b.fonctionnel ? `<h2>Tests et scores</h2>${table(['Test', 'Côté', 'Résultat', 'Remarque'], tests.map(r => [r.t, r.cote, r.r, r.note]))}${table(['Score', 'Résultat'], scores.map(r => [r.s, r.v]))}${t('Bilan fonctionnel', b.fonctionnel)}` : ''}
+<h2>Synthèse</h2>
+${t('Diagnostic kinésithérapique', b.diagKine)}${t('Objectifs', b.objectifs)}${t('Plan de traitement', b.plan)}${b.seances ? `<h3>Nombre de séances prévu</h3><p>${esc(b.seances)}</p>` : ''}${t('Conseils donnés au patient', b.conseilsPatient)}${t('Notes', b.notes)}
+</body></html>`;
+}
+function suiviHTML(p) {
+  const ss = sortedSeances(p);
+  return `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Suivi des séances – ${esc(pName(p))}</title><style>${REPORT_CSS}</style></head><body>
+<h1>Suivi des séances</h1><p class="meta">${esc(pName(p))}${p.naissance ? `, né(e) le ${fdate(p.naissance)}` : ''}. ${ss.length} séance${ss.length > 1 ? 's' : ''}${seancesPrevues(p) ? ` sur ${seancesPrevues(p)} prévues` : ''}.</p>
+<table><thead><tr><th>Séance</th><th>EVA</th><th>Ressenti</th><th>Techniques et dosages</th><th>Réaction</th></tr></thead><tbody>
+${ss.map((s, i) => `<tr><td>${i + 1}<br>${fdate(s.date)}</td><td>${s.eva === '' ? '—' : s.eva + '/10'}</td><td>${esc(s.ressenti)}</td><td>${esc(s.techs.join(', '))}${s.detail ? `<br>${esc(s.detail)}` : ''}</td><td>${esc(s.reaction)}</td></tr>`).join('')}
+</tbody></table></body></html>`;
+}
+async function getDownloads() {
+  try { return window.claude ? await window.claude.use('downloads') : null; } catch (e) { return null; }
+}
+async function offerFile(filename, data) {
+  const dl = await getDownloads();
+  if (!dl) return shareFile(filename, data);
+  try { await dl.save({ filename, data }); setStatus('Fichier enregistré.'); return true; }
+  catch (e) { if (e && e.code !== 'declined') setStatus('Le fichier n’a pas pu être enregistré.'); return false; }
+}
+async function shareFile(filename, data) {
+  const type = filename.endsWith('.json') ? 'application/json' : 'text/html';
+  const file = new File([data], filename, { type });
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try { await navigator.share({ files: [file], title: filename }); setStatus('Fichier partagé.'); return true; }
+    catch (e) { if (e && e.name === 'AbortError') return false; }
+  }
+  try {
+    const url = URL.createObjectURL(file), a = document.createElement('a');
+    a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+    setStatus('Fichier enregistré.'); return true;
+  } catch (e) { setStatus('Le fichier n’a pas pu être enregistré.'); return false; }
+}
+const slug = s =>String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+/* ---------- Événements ---------- */
+function openView(fn) { fn(); renderSide(); renderMain(); $('#main').scrollTop = 0; }
+document.addEventListener('click', async e => {
+  const ai = e.target.closest && e.target.closest('input[data-ang]');
+  if (ai) { openAngle(+ai.dataset.i, ai.dataset.k); return; }
+  const t = e.target.closest('[data-act]');
+  if (!t) return;
+  const a = t.dataset.act, p = P(), b = B(), s = SE();
+  switch (a) {
+    case 'newP': openPDlg(null); break;
+    case 'editP': openPDlg(p); break;
+    case 'closePDlg': $('#pdlg').close(); break;
+    case 'savePDlg': savePDlg(); break;
+    case 'closeInfo': $('#info').close(); break;
+    case 'openP': openView(() => { ui.pid = t.dataset.id; ui.bid = null; ui.sid = null; }); break;
+    case 'back': openView(() => { ui.pid = null; ui.bid = null; ui.sid = null; }); break;
+    case 'delP':
+      if (await askConfirm(`Supprimer ${pName(p)}, ses bilans et ses séances ?`)) {
+        S.patients = S.patients.filter(x => x !== p); ui.pid = ui.bid = ui.sid = null; save(); renderSide(); renderMain();
+      } break;
+    case 'newB': openMotif(); break;
+    case 'mtPick': { const k = t.dataset.k, m = MOTIFS[k]; mtSel = { motif: k, cote: mtSel ? mtSel.cote : '', j: new Set(m.j), m: new Set(m.m), t: new Set(m.t), s: new Set(m.s) }; renderMotif(); $('#mt-ok').disabled = false; break; }
+    case 'mtCote': mtSel.cote = mtSel.cote === t.dataset.c ? '' : t.dataset.c; renderMotif(); break;
+    case 'mtToggle': { const g = mtSel[t.dataset.g], x = t.dataset.x; if (g.has(x)) g.delete(x); else g.add(x); t.classList.toggle('on', g.has(x)); break; }
+    case 'mtCancel': $('#motifDlg').close(); break;
+    case 'mtOk': {
+      if (!mtSel) break;
+      const nb = blank(); applyMotif(nb, mtSel); $('#motifDlg').close();
+      p.bilans.push(nb); save(); openView(() => { ui.bid = nb.id; ui.sid = null; ui.tab = 'anamnese'; suggCache = []; }); break;
+    }
+    case 'angStep': angSel.v += +t.dataset.d; drawAng(); break;
+    case 'angSet': angSel.v = +t.dataset.v; drawAng(); break;
+    case 'angOk': commitAngle(String(angSel.v)); break;
+    case 'angClear': commitAngle(''); break;
+    case 'angCancel': $('#angDlg').close(); angSel = null; break;
+    case 'newFollow': {
+      const last = p.bilans.slice().sort(byDate).pop();
+      const nb = last ? followUp(last) : blank();
+      p.bilans.push(nb); save(); openView(() => { ui.bid = nb.id; ui.sid = null; ui.tab = 'anamnese'; suggCache = []; }); break;
+    }
+    case 'openB': openView(() => { ui.bid = t.dataset.id; ui.sid = null; ui.tab = 'anamnese'; suggCache = []; }); break;
+    case 'closeB': openView(() => { ui.bid = null; ui.sid = null; }); break;
+    case 'delB':
+      if (await askConfirm(`Supprimer le ${bTitle(b).charAt(0).toLowerCase() + bTitle(b).slice(1)} ?`)) {
+        p.bilans = p.bilans.filter(x => x !== b); ui.bid = null; save(); renderSide(); renderMain();
+      } break;
+    case 'newS': { const ns = newSeance(p); p.seances.push(ns); save(); openView(() => { ui.sid = ns.id; ui.bid = null; }); break; }
+    case 'openS': openView(() => { ui.sid = t.dataset.id; ui.bid = null; }); break;
+    case 'delS':
+      if (await askConfirm(`Supprimer la ${sTitle(p, s).charAt(0).toLowerCase() + sTitle(p, s).slice(1)} ?`)) {
+        p.seances = p.seances.filter(x => x !== s); ui.sid = null; save(); renderSide(); renderMain();
+      } break;
+    case 'tech': {
+      const k = t.dataset.t, i = s.techs.indexOf(k);
+      if (i >= 0) s.techs.splice(i, 1); else s.techs.push(k);
+      t.classList.toggle('on', i < 0); t.setAttribute('aria-pressed', i < 0); saveSoon(); break;
+    }
+    case 'clearSEva': s.eva = ''; $('#v-seva').textContent = '—'; saveSoon(); break;
+    case 'tab': ui.tab = t.dataset.k; renderMain(); break;
+    case 'tool': ui.tool = t.dataset.k; document.querySelectorAll('.tools .chip[data-act=tool]').forEach(c => c.classList.toggle('on', c.dataset.k === ui.tool)); break;
+    case 'undoMark': if (b.marks.length) { b.marks.pop(); saveSoon(); $('#bodyzone').innerHTML = bodyZone(b.marks, true); } break;
+    case 'clearMarks': if (b.marks.length && await askConfirm('Effacer tout le schéma ?', 'Effacer')) { b.marks = []; saveSoon(); $('#bodyzone').innerHTML = bodyZone(b.marks, true); } break;
+    case 'clearEva': b[t.dataset.k] = ''; $('#v-' + t.dataset.k).textContent = '—'; saveSoon(); break;
+    case 'addJ': {
+      const j = t.dataset.j;
+      Object.entries(NORMES[j]).forEach(([m, n]) => { if (!b.articulaire.some(r => r.j === j && r.m === m)) b.articulaire.push({ j, m, g: '', d: '', n }); });
+      saveSoon(); renderMain(); break;
+    }
+    case 'addM': if (!b.musculaire.some(r => r.m === t.dataset.m)) b.musculaire.push({ m: t.dataset.m, g: '', d: '' }); saveSoon(); renderMain(); break;
+    case 'addT': b.tests.push({ t: t.dataset.t, cote: '', r: '', note: '' }); saveSoon(); renderMain(); break;
+    case 'addS': if (!b.scores.some(r => r.s === t.dataset.s)) b.scores.push({ s: t.dataset.s, v: '' }); saveSoon(); renderMain(); break;
+    case 'addRow': {
+      const l = t.dataset.list;
+      const row = { articulaire: { j: '', m: '', g: '', d: '', n: '', free: true }, musculaire: { m: '', g: '', d: '' }, tests: { t: '', cote: '', r: '', note: '' }, scores: { s: '', v: '' } }[l];
+      b[l].push(row); saveSoon(); renderMain();
+      const ins = document.querySelectorAll(`[data-list="${l}"][data-i="${b[l].length - 1}"]`); if (ins[0]) ins[0].focus();
+      break;
+    }
+    case 'delRow': b[t.dataset.list].splice(+t.dataset.i, 1); saveSoon(); renderMain(); break;
+    case 'infoT': infoTest(t.dataset.t); break;
+    case 'infoMRC': infoMRC(); break;
+    case 'expand': {
+      const k = t.dataset.k, ta = $('#big-ta');
+      $('#big-title').textContent = t.dataset.label; ta.dataset.f = k; ta.value = b[k] || '';
+      $('#bigDlg').showModal(); setTimeout(() => ta.focus(), 50); break;
+    }
+    case 'bigDone': {
+      const ta = $('#big-ta'), k = ta.dataset.f; $('#bigDlg').close();
+      const orig = $('#f-' + k); if (orig && b) { orig.value = b[k] || ''; autoGrow(orig); }
+      break;
+    }
+    case 'addRestr': {
+      const txt = RESTR[+t.dataset.i], cur = (p.restrictions || '').replace(/\s+$/, '');
+      if (!cur.includes(txt)) { p.restrictions = (cur ? cur + '\n' : '') + '• ' + txt; const ta = $('#pf-restrictions'); if (ta) ta.value = p.restrictions; saveSoon(); }
+      break;
+    }
+    case 'openCP': {
+      const cur = b.conseilsPatient || '';
+      $('#cp-list').innerHTML = CONSEILS_PATIENT.map((c, i) => {
+        const done = cur.includes(c);
+        return `<label class="cp-row${done ? ' done' : ''}"><input type="checkbox" data-cp="${i}"${done ? ' checked disabled' : ''}><input type="text" class="cp-txt" id="cp-t${i}" value="${esc(c)}"${done ? ' disabled' : ''} aria-label="Texte du conseil">${done ? '<small>déjà ajouté</small>' : ''}</label>`;
+      }).join('');
+      $('#cp-other').value = ''; $('#cpDlg').showModal(); break;
+    }
+    case 'cpCancel': $('#cpDlg').close(); break;
+    case 'cpOk': {
+      const lines = [...document.querySelectorAll('#cp-list input[data-cp]:checked:not(:disabled)')].map(c => $('#cp-t' + c.dataset.cp).value.trim()).filter(Boolean);
+      const other = $('#cp-other').value.trim(); if (other) lines.push(other);
+      if (lines.length) {
+        const cur = (b.conseilsPatient || '').replace(/\s+$/, '');
+        b.conseilsPatient = (cur ? cur + '\n' : '') + lines.map(l => '• ' + l).join('\n');
+        const ta = $('#f-conseilsPatient'); if (ta) { ta.value = b.conseilsPatient; autoGrow(ta); }
+        saveSoon(); setStatus(`${lines.length} conseil${lines.length > 1 ? 's' : ''} ajouté${lines.length > 1 ? 's' : ''}.`);
+      }
+      $('#cpDlg').close(); break;
+    }
+    case 'mClear': {
+      const r = b.musculaire[+t.dataset.i]; if (!r) break;
+      r[t.dataset.k] = ''; t.textContent = '—'; t.className = 'mr-v empty';
+      const rg = t.closest('.mr').querySelector('input'); rg.value = 0; rg.classList.add('unset'); saveSoon(); break;
+    }
+    case 'addCP': {
+      const txt = CONSEILS_PATIENT[+t.dataset.i], cur = (b.conseilsPatient || '').replace(/\s+$/, '');
+      if (cur.includes(txt)) break;
+      b.conseilsPatient = (cur ? cur + '\n' : '') + '• ' + txt;
+      const ta = $('#f-conseilsPatient'); if (ta) ta.value = b.conseilsPatient;
+      t.classList.add('on'); saveSoon(); break;
+    }
+    case 'conseil': runConseil(); break;
+    case 'stopConseil': if (conseilCtl) conseilCtl.abort(); break;
+    case 'conseilToPlan': if (b.conseil) conseilToPlan(b); break;
+    case 'addObj': appendObj(b, [suggCache[+t.dataset.i]]); break;
+    case 'addAllObj': appendObj(b, suggCache.filter(x => !(b.objectifs || '').includes(x))); break;
+    case 'export': save(); offerFile(`Bilan-${slug(p.nom)}-${slug(p.prenom)}-${b.date}.html`, reportHTML(p, b)); break;
+    case 'exportSuivi': save(); offerFile(`Suivi-${slug(p.nom)}-${slug(p.prenom)}-${today()}.html`, suiviHTML(p)); break;
+    case 'backup': {
+      await save(); const env = lastEnv || readEnc();
+      if (env && await offerFile(`sauvegarde-bilans-${today()}.json`, JSON.stringify({ app: 'bilan-kine', format: 'chiffré', date: new Date().toISOString(), ...env }))) {
+        S.lastBackup = new Date().toISOString(); save(); renderBackupInfo();
+      }
+      break;
+    }
+    case 'lock': lockNow(); break;
+    case 'changeCode': ['old', 'new', 'new2'].forEach(k => $('#cc-' + k).value = ''); $('#cc-err').textContent = ''; $('#ccDlg').showModal(); break;
+    case 'ccCancel': $('#ccDlg').close(); break;
+    case 'ccSave': changeCode(); break;
+    case 'restore': $('#imp').value = ''; $('#imp').click(); break;
+  }
+});
+
+function onField(e) {
+  const el = e.target;
+  if (el.id === 'q') { renderSide(); return; }
+  if (el.dataset.pf) { const p = P(); if (!p) return; p[el.dataset.pf] = el.value; saveSoon(); return; }
+  if (el.dataset.sf) {
+    const s = SE(); if (!s) return;
+    const k = el.dataset.sf;
+    s[k] = el.type === 'range' ? +el.value : el.value;
+    if (k === 'eva') $('#v-seva').textContent = el.value;
+    if (k === 'date') $('#stitle').textContent = sTitle(P(), s);
+    saveSoon(); return;
+  }
+  const b = B(); if (!b) return;
+  if (el.dataset.f) {
+    const k = el.dataset.f;
+    b[k] = el.type === 'range' ? +el.value : el.value;
+    if (el.type === 'range') $('#v-' + k).textContent = el.value;
+    if (k === 'date' || k === 'type') { $('#btitle').textContent = bTitle(b); renderSide(); }
+    if (k === 'objectifs' && suggCache.length) renderSugg(b);
+    saveSoon();
+  } else if (el.dataset.list) {
+    const r = b[el.dataset.list][+el.dataset.i]; if (!r) return;
+    r[el.dataset.k] = el.value;
+    if (el.dataset.list === 'articulaire') {
+      const tr = el.closest('tr');
+      tr.querySelectorAll('td[data-c]').forEach(td => td.classList.toggle('low', isLow(r[td.dataset.c], r.n)));
+    }
+    saveSoon();
+  }
+}
+function autoGrow(el) {
+  if (!el || el.id === 'big-ta') return;
+  const min = (+el.getAttribute('rows') || 3) * 24 + 22;
+  el.style.height = 'auto'; el.style.height = Math.max(min, el.scrollHeight + 2) + 'px';
+}
+new MutationObserver(() => document.querySelectorAll('#main textarea').forEach(autoGrow)).observe($('#main'), { childList: true, subtree: true });
+document.addEventListener('input', e => { if (e.target.tagName === 'TEXTAREA') autoGrow(e.target); });
+document.addEventListener('input', e => { if (e.target.dataset && e.target.dataset.mr) mSet(e.target); });
+document.addEventListener('pointerup', e => { if (e.target.dataset && e.target.dataset.mr) mSet(e.target); });
+document.addEventListener('input', onField);
+document.addEventListener('change', e => {
+  if (e.target.id === 'imp') return;
+  if (e.target.dataset.pick) { pickAdd(e.target); return; }
+  onField(e);
+  if (e.target.dataset.list === 'tests' && e.target.dataset.k === 't') renderMain();
+});
+
+function askCode() {
+  return new Promise(res => {
+    const d = $('#codeDlg'); $('#cd-code').value = '';
+    let done = false; const end = v => { if (done) return; done = true; if (d.open) d.close(); res(v); };
+    $('#cd-ok').onclick = () => end($('#cd-code').value); $('#cd-no').onclick = () => end(null); d.oncancel = () => end(null);
+    d.showModal();
+  });
+}
+$('#imp').addEventListener('change', async e => {
+  const f = e.target.files && e.target.files[0]; if (!f) return;
+  let d;
+  try { d = JSON.parse(await f.text()); } catch (err) { setStatus('Ce fichier n’est pas une sauvegarde valide.'); return; }
+  try {
+    if (d && d.ct && d.iv && d.salt) {
+      let data = null;
+      if (d.salt === b64(cryptoSalt)) { try { data = await decryptEnv(d, cryptoKey); } catch (_) {} }
+      while (!data) {
+        const code = await askCode(); if (code === null) return;
+        try { data = await decryptEnv(d, await deriveKey(code, unb64(d.salt))); } catch (_) { setStatus('Code incorrect pour cette sauvegarde.'); }
+      }
+      d = data;
+    }
+    if (!d || !Array.isArray(d.patients)) throw new Error('format');
+    const n = d.patients.length;
+    if (await askConfirm(`Remplacer les données de cet iPad par la sauvegarde (${n} patient${n > 1 ? 's' : ''}) ?`, 'Remplacer')) {
+      S = { patients: d.patients }; migrate(); ui.pid = ui.bid = ui.sid = null; await save(); renderSide(); renderMain(); setStatus('Sauvegarde restaurée.');
+    }
+  } catch (err) { setStatus('Ce fichier n’est pas une sauvegarde valide.'); }
+});
+
+/* ---------- Verrouillage ---------- */
+let lockMode = 'unlock', fails = 0, waitUntil = 0;
+async function showLock() {
+  $('#app').hidden = true; $('#lock').hidden = false;
+  $('#lk-title').textContent = 'Chargement…'; $('#lk-sub').textContent = ''; $('#lk-err').textContent = '';
+  ['#lk-code', '#lk-code2', '#lk-reset', '#lk-go'].forEach(id => $(id).hidden = true);
+  let enc = readEnc();
+  try {
+    const v = await getVault();
+    if (v) { const snap = await v.get(); if (snap.exists) { const r = JSON.parse(snap.data().env); if (!enc || (r.at || 0) > (enc.at || 0)) enc = r; } }
+  } catch (_) {}
+  lastEnv = enc;
+  $('#lk-code').hidden = false; $('#lk-go').hidden = false;
+  lockMode = enc ? 'unlock' : 'setup';
+  $('#app').hidden = true; $('#lock').hidden = false;
+  $('#lk-title').textContent = enc ? 'Entrez votre code' : 'Créez votre code d’accès';
+  $('#lk-sub').textContent = enc ? 'Les données de cette application sont chiffrées avec ce code.'
+    : 'Ce code chiffre toutes les données de l’application sur cet appareil. Choisissez un code à 6 chiffres et notez-le en lieu sûr : sans lui, les données ne pourront pas être récupérées.';
+  $('#lk-code2').hidden = !!enc; $('#lk-reset').hidden = !enc;
+  $('#lk-go').textContent = enc ? 'Déverrouiller' : 'Créer le code';
+  $('#lk-code').value = ''; $('#lk-code2').value = ''; $('#lk-err').textContent = '';
+  setTimeout(() => $('#lk-code').focus(), 60);
+}
+async function lockGo() {
+  const code = $('#lk-code').value, err = $('#lk-err'), btn = $('#lk-go');
+  if (Date.now() < waitUntil) { err.textContent = `Trop d’essais. Patientez ${Math.ceil((waitUntil - Date.now()) / 1000)} s.`; return; }
+  if (lockMode === 'setup') {
+    if (!/^\d{6}$/.test(code)) { err.textContent = 'Le code doit comporter exactement 6 chiffres.'; return; }
+    if (code !== $('#lk-code2').value) { err.textContent = 'Les deux codes ne sont pas identiques.'; return; }
+    btn.disabled = true; err.textContent = 'Chiffrement en cours…';
+    cryptoSalt = crypto.getRandomValues(new Uint8Array(16));
+    cryptoKey = await deriveKey(code, cryptoSalt);
+    S = readPlain() || { patients: [] }; migrate();
+    await save();
+    if (lastEnv) { try { localStorage.removeItem(KEY_PLAIN); } catch (_) {} }
+    btn.disabled = false; unlocked();
+    return;
+  }
+  btn.disabled = true; err.textContent = 'Vérification…';
+  const env = lastEnv || readEnc();
+  try {
+    const salt = unb64(env.salt), key = await deriveKey(code, salt);
+    S = await decryptEnv(env, key); cryptoKey = key; cryptoSalt = salt; fails = 0; migrate(); unlocked();
+  } catch (e) {
+    fails++;
+    if (fails >= 5) waitUntil = Date.now() + 30000 * (fails - 4);
+    err.textContent = fails >= 5 ? `Code incorrect. Patientez ${30 * (fails - 4)} s avant de réessayer.` : 'Code incorrect.';
+    $('#lk-code').select();
+  } finally { btn.disabled = false; }
+}
+function unlocked() {
+  $('#lock').hidden = true; $('#app').hidden = false; $('#lk-code').value = ''; $('#lk-code2').value = '';
+  ui.pid = ui.bid = ui.sid = null; renderSide(); renderMain(); armIdle();
+}
+async function lockNow() {
+  if (!cryptoKey) return;
+  clearTimeout(saveT); clearTimeout(idleT);
+  if (conseilCtl) conseilCtl.abort();
+  await save();
+  cryptoKey = null; S = { patients: [] }; ui.pid = ui.bid = ui.sid = null;
+  document.querySelectorAll('dialog[open]').forEach(d => d.close());
+  $('#main').innerHTML = ''; $('#plist').innerHTML = ''; $('#q').value = '';
+  showLock();
+}
+async function changeCode() {
+  const o = $('#cc-old').value, n = $('#cc-new').value, n2 = $('#cc-new2').value, err = $('#cc-err');
+  if (!/^\d{6}$/.test(n)) { err.textContent = 'Le nouveau code doit comporter exactement 6 chiffres.'; return; }
+  if (n !== n2) { err.textContent = 'Les deux nouveaux codes ne sont pas identiques.'; return; }
+  err.textContent = 'Vérification…';
+  try { await decryptEnv(lastEnv || readEnc(), await deriveKey(o, cryptoSalt)); } catch (e) { err.textContent = 'Le code actuel est incorrect.'; return; }
+  await saving;
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  cryptoKey = await deriveKey(n, salt); cryptoSalt = salt;
+  await save(); $('#ccDlg').close(); setStatus('Code changé. Pensez à refaire une sauvegarde.');
+}
+$('#lk-go').addEventListener('click', lockGo);
+['#lk-code', '#lk-code2'].forEach(id => $(id).addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  if (id === '#lk-code' && lockMode === 'setup') $('#lk-code2').focus(); else lockGo();
+}));
+$('#lk-reset').addEventListener('click', async () => {
+  if (await askConfirm('Effacer définitivement toutes les données de l’application sur cet appareil ? Vous pourrez ensuite restaurer une sauvegarde avec son code.', 'Tout effacer')) {
+    try { localStorage.removeItem(KEY_ENC); localStorage.removeItem(KEY_PLAIN); } catch (_) {}
+    lastEnv = null;
+    try { const v = await getVault(); if (v) await v.delete(); } catch (_) {}
+    showLock();
+  }
+});
+const IDLE_MS = 5 * 60 * 1000; let idleT, hiddenAt = 0;
+function armIdle() { clearTimeout(idleT); if (cryptoKey) idleT = setTimeout(lockNow, IDLE_MS); }
+['pointerdown', 'keydown', 'input'].forEach(ev => document.addEventListener(ev, armIdle, true));
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { hiddenAt = Date.now(); if (cryptoKey) save(); }
+  else if (cryptoKey && Date.now() - hiddenAt > 60000) lockNow();
+});
+
+setupAngle();
+showLock();
+if ('serviceWorker' in navigator && window.isSecureContext) navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>
+</body>
+</html>
