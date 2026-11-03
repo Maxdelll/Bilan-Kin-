@@ -1,7 +1,7 @@
 // Mise en cache pour un fonctionnement hors ligne.
 // Après une mise à jour de index.html, changez VERSION pour que l'iPad récupère la nouvelle version.
-const VERSION = 'bilan-kine-v1';
-const FILES = ['./', 'index.html', 'manifest.webmanifest', 'icon-180.png', 'icon-192.png', 'icon-512.png'];
+const VERSION = 'bilan-kine-v2';
+const FILES = ['./', 'index.html', 'manifest.webmanifest', 'icon-180.png', 'icon-192.png', 'icon-512.png', 'html2pdf.bundle.min.js'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(VERSION).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));

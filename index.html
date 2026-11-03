@@ -428,6 +428,13 @@ input.ang-in{cursor:pointer;caret-color:transparent}
   <div class="dlg-actions"><button class="btn" id="send-no">Annuler</button><button class="btn primary" id="send-ok">Envoyer et obtenir les conseils</button></div>
 </dialog>
 
+<dialog id="fileDlg">
+  <h2>Le fichier est prêt</h2>
+  <p class="hint" id="fd-name" style="margin:0;word-break:break-all"></p>
+  <p class="hint" style="margin:8px 0 0">Touchez « Enregistrer », puis choisissez « Enregistrer dans Fichiers ».</p>
+  <div class="dlg-actions"><button class="btn" id="fd-no">Annuler</button><button class="btn primary" id="fd-ok">Enregistrer</button></div>
+</dialog>
+
 <dialog id="info">
   <div id="info-body"></div>
   <div class="dlg-actions"><button class="btn primary" data-act="closeInfo">Fermer</button></div>
@@ -1479,19 +1486,85 @@ async function offerFile(filename, data) {
   try { await dl.save({ filename, data }); setStatus('Fichier enregistré.'); return true; }
   catch (e) { if (e && e.code !== 'declined') setStatus('Le fichier n’a pas pu être enregistré.'); return false; }
 }
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+function downloadFile(file) {
+  const url = URL.createObjectURL(file), a = document.createElement('a');
+  a.href = url; a.download = file.name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+}
+// Sur iPad, l'enregistrement doit partir d'un toucher : on affiche un bouton une fois le fichier prêt.
+function askSave(file) {
+  return new Promise(res => {
+    const d = $('#fileDlg'), ok = $('#fd-ok'), no = $('#fd-no');
+    $('#fd-name').textContent = file.name;
+    const done = v => { ok.onclick = no.onclick = d.oncancel = null; d.close(); res(v); };
+    ok.onclick = async () => {
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try { await navigator.share({ files: [file] }); done(true); }
+        catch (e) { if (e && e.name === 'AbortError') done(false); else { downloadFile(file); done(true); } }
+      } else { downloadFile(file); done(true); }
+    };
+    no.onclick = () => done(false);
+    d.oncancel = () => done(false);
+    d.showModal();
+  });
+}
 async function shareFile(filename, data) {
-  const type = filename.endsWith('.json') ? 'application/json' : 'text/html';
+  const type = filename.endsWith('.json') ? 'application/json' : filename.endsWith('.pdf') ? 'application/pdf' : 'text/html';
   const file = new File([data], filename, { type });
-  if (navigator.canShare && navigator.canShare({ files: [file] })) {
-    try { await navigator.share({ files: [file], title: filename }); setStatus('Fichier partagé.'); return true; }
-    catch (e) { if (e && e.name === 'AbortError') return false; }
-  }
   try {
-    const url = URL.createObjectURL(file), a = document.createElement('a');
-    a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 60000);
-    setStatus('Fichier enregistré.'); return true;
+    if (isIOS) { const ok = await askSave(file); if (ok) setStatus('Fichier enregistré.'); return ok; }
+    downloadFile(file); setStatus('Fichier téléchargé.'); return true;
   } catch (e) { setStatus('Le fichier n’a pas pu être enregistré.'); return false; }
+}
+/* ---------- PDF ---------- */
+let pdfLib = null;
+function loadPdfLib() {
+  if (window.html2pdf) return Promise.resolve();
+  return pdfLib = pdfLib || new Promise((res, rej) => {
+    const s = document.createElement('script'); s.src = 'html2pdf.bundle.min.js';
+    s.onload = res; s.onerror = () => { pdfLib = null; rej(new Error('lib')); };
+    document.head.appendChild(s);
+  });
+}
+const PDF_CSS = '.rp{background:#fff;color:#16252A;font-family:"Helvetica Neue",Arial,sans-serif;font-size:13px;line-height:1.5;width:720px;padding:0}' +
+  REPORT_CSS.replace(/body\{[^}]*\}/, '').replace(/(^|\})\s*([^{}]+)\{/g, (m, a, sel) => a + sel.split(',').map(x => '.rp ' + x.trim()).join(',') + '{') +
+  '.rp h1,.rp h2,.rp h3{font-family:"Helvetica Neue",Arial,sans-serif;letter-spacing:0}.rp th{color:#16252A;font-size:12px}.rp td{padding:6px 8px;font-size:13px}.rp table{min-width:0}.rp h2:first-of-type{margin-top:18px}';
+async function exportPdf(filename, html) {
+  setStatus('Création du PDF…');
+  try { await loadPdfLib(); } catch (e) { setStatus('Le module PDF n’a pas pu être chargé. Vérifiez la connexion et réessayez.'); return; }
+  const el = document.createElement('div');
+  el.className = 'rp';
+  el.innerHTML = `<style>${PDF_CSS}</style>` + new DOMParser().parseFromString(html, 'text/html').body.innerHTML;
+  // Les schémas SVG deviennent des images avec leur propre style, sinon ils sortent vides.
+  await Promise.all([...el.querySelectorAll('svg')].map(async svg => {
+    const vb = (svg.getAttribute('viewBox') || '0 0 200 400').split(/\s+/).map(Number), k = 3;
+    svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    svg.setAttribute('width', vb[2] * k); svg.setAttribute('height', vb[3] * k);
+    svg.insertAdjacentHTML('afterbegin', `<style>${REPORT_CSS.replace(/body\{[^}]*\}/, '')}</style>`);
+    const src = new Image();
+    src.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(new XMLSerializer().serializeToString(svg));
+    try { await src.decode(); } catch (e) { svg.remove(); return; }
+    const c = document.createElement('canvas'); c.width = vb[2] * k; c.height = vb[3] * k;
+    c.getContext('2d').drawImage(src, 0, 0, c.width, c.height);
+    const img = new Image(); img.src = c.toDataURL('image/png');
+    img.style.cssText = 'width:100%;height:auto;display:block';
+    await img.decode().catch(() => {});
+    svg.replaceWith(img);
+  }));
+  const sx = window.scrollX, sy = window.scrollY;
+  window.scrollTo(0, 0);
+  try {
+    const blob = await html2pdf().set({
+      margin: [12, 12, 14, 12], filename,
+      image: { type: 'jpeg', quality: 0.95 },
+      html2canvas: { scale: 2, backgroundColor: '#ffffff', scrollX: 0, scrollY: 0 },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      pagebreak: { mode: ['css', 'legacy'], avoid: ['tr', 'h3', 'p', '.figs', '.leg'] }
+    }).from(el).outputPdf('blob');
+    window.scrollTo(sx, sy);
+    return shareFile(filename, blob);
+  } catch (e) { window.scrollTo(sx, sy); setStatus('Le PDF n’a pas pu être créé.'); }
 }
 const slug = s =>String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '');
 
@@ -1628,8 +1701,8 @@ document.addEventListener('click', async e => {
     case 'conseilToPlan': if (b.conseil) conseilToPlan(b); break;
     case 'addObj': appendObj(b, [suggCache[+t.dataset.i]]); break;
     case 'addAllObj': appendObj(b, suggCache.filter(x => !(b.objectifs || '').includes(x))); break;
-    case 'export': save(); offerFile(`Bilan-${slug(p.nom)}-${slug(p.prenom)}-${b.date}.html`, reportHTML(p, b)); break;
-    case 'exportSuivi': save(); offerFile(`Suivi-${slug(p.nom)}-${slug(p.prenom)}-${today()}.html`, suiviHTML(p)); break;
+    case 'export': save(); exportPdf(`Bilan-${slug(p.nom)}-${slug(p.prenom)}-${b.date}.pdf`, reportHTML(p, b)); break;
+    case 'exportSuivi': save(); exportPdf(`Suivi-${slug(p.nom)}-${slug(p.prenom)}-${today()}.pdf`, suiviHTML(p)); break;
     case 'backup': {
       await save(); const env = lastEnv || readEnc();
       if (env && await offerFile(`sauvegarde-bilans-${today()}.json`, JSON.stringify({ app: 'bilan-kine', format: 'chiffré', date: new Date().toISOString(), ...env }))) {
