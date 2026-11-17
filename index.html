@@ -219,6 +219,25 @@ svg.fig.edit{touch-action:none;cursor:crosshair}
 .conseil-out li{margin:4px 0}
 .conseil-out p{margin:4px 0}
 .thinking{color:var(--muted)}
+.no-ai .ai-only{display:none!important}
+.memo-obj{margin-top:12px;padding-top:10px;border-top:1px solid var(--line)}
+.memo-obj b{display:block;font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:4px}
+.seg{display:flex;gap:4px;margin-top:10px;background:var(--mist);border-radius:10px;padding:3px}
+.seg button{flex:1;border:0;background:none;border-radius:8px;min-height:36px;font-weight:700;color:var(--muted);cursor:pointer;font-size:14px}
+.seg button.on{background:var(--panel);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.badge-end{display:inline-block;background:var(--mist);color:var(--muted);border-radius:999px;padding:4px 12px;font-weight:700;font-size:14px;margin:8px 0 0}
+#setDlg{width:min(520px,94vw)}
+.set-sec{border-top:1px solid var(--line);padding:14px 0}
+.set-sec:first-of-type{border-top:0;padding-top:0}
+.set-sec h3{font-size:16px;margin:0 0 10px}
+.set-sec .f{display:block}
+.todo{background:var(--panel);border:1px solid var(--line);border-left:5px solid var(--pain);border-radius:12px;padding:12px 16px}
+.todo ul{margin:0 0 12px;padding-left:20px}
+.todo li{margin:4px 0}
+.ar .mr-v{width:62px;font-size:18px}
+.ar .mr-track{min-width:160px}
+.ar-ticks{position:relative;display:flex;justify-content:space-between;font-size:12px;color:var(--muted);padding:0 2px;height:16px}
+.ar-ticks .nm{position:absolute;top:-1px;transform:translateX(-50%);color:var(--raid);font-size:11px}
 .mr{display:flex;align-items:center;gap:10px;min-width:220px}
 .mr-v{flex:none;width:44px;height:44px;border-radius:10px;border:1px solid var(--line);background:var(--paper);font-family:var(--display);font-weight:700;font-size:22px;cursor:pointer;padding:0}
 .mr-v.lo{background:var(--warn-bg);color:var(--pain);border-color:var(--pain)}
@@ -325,7 +344,8 @@ input.ang-in{cursor:pointer;caret-color:transparent}
       <div class="brand"><svg viewBox="0 0 26 26" aria-hidden="true"><circle cx="13" cy="5" r="3.2" fill="var(--accent)"/><path d="M13 9v8M7 12l6 2 6-2M9 24l4-7 4 7" fill="none" stroke="var(--accent)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Bilan kiné</div>
       <button class="btn primary sm" data-act="newP">Nouveau patient</button>
     </div>
-    <div class="search"><input id="q" type="search" placeholder="Rechercher un patient" aria-label="Rechercher un patient"></div>
+    <div class="search"><input id="q" type="search" placeholder="Rechercher un patient" aria-label="Rechercher un patient">
+      <div class="seg" role="tablist" aria-label="Filtrer les patients"><button data-act="pf" data-v="actifs" id="pf-actifs">En cours</button><button data-act="pf" data-v="termines" id="pf-termines">Terminés</button></div></div>
     <nav id="plist" class="plist" aria-label="Patients"></nav>
     <div class="sfoot">
       <p id="bk-info" class="bk"></p>
@@ -335,7 +355,7 @@ input.ang-in{cursor:pointer;caret-color:transparent}
       </div>
       <div class="row" style="margin-top:8px">
         <button class="btn sm" data-act="lock">Verrouiller</button>
-        <button class="btn sm" data-act="changeCode">Changer le code</button>
+        <button class="btn sm" data-act="settings">Paramètres</button>
       </div>
       <p class="status" id="status" aria-live="polite"></p>
     </div>
@@ -435,12 +455,37 @@ input.ang-in{cursor:pointer;caret-color:transparent}
   <div class="dlg-actions"><button class="btn" id="fd-no">Annuler</button><button class="btn primary" id="fd-ok">Enregistrer</button></div>
 </dialog>
 
+<dialog id="setDlg">
+  <h2>Paramètres</h2>
+  <p class="hint" style="margin:-8px 0 14px">Version <span id="app-version"></span></p>
+  <div class="set-sec">
+    <h3>Verrouillage</h3>
+    <label class="f"><span>Verrouiller après une inactivité de</span><select id="set-lock" data-set="lockMin">
+      <option value="1">1 minute</option><option value="2">2 minutes</option><option value="5">5 minutes</option><option value="10">10 minutes</option><option value="15">15 minutes</option><option value="30">30 minutes</option></select></label>
+    <label class="f" style="margin-top:12px"><span>Quand l’app passe en arrière-plan, verrouiller après</span><select id="set-bg" data-set="bgMin">
+      <option value="0">Tout de suite</option><option value="1">1 minute</option><option value="5">5 minutes</option><option value="15">15 minutes</option></select></label>
+  </div>
+  <div class="set-sec">
+    <h3>Code d’accès</h3>
+    <button class="btn" data-act="changeCode">Changer le code</button>
+    <p class="hint" style="margin:10px 0 0">Face ID et Touch ID : prochaine étape, uniquement dans la version installée sur l’iPad (iOS 18 ou plus récent).</p>
+  </div>
+  <div class="set-sec">
+    <h3>Bilan articulaire</h3>
+    <label class="f"><span>Signaler une amplitude comme hors norme en dessous de</span><select id="set-seuil" data-set="seuil">
+      <option value="80">80 % de la norme</option><option value="90">90 % de la norme</option><option value="100">100 % de la norme</option></select></label>
+  </div>
+  <div class="dlg-actions"><button class="btn primary" data-act="closeSettings">Fermer</button></div>
+</dialog>
+
 <dialog id="info">
   <div id="info-body"></div>
   <div class="dlg-actions"><button class="btn primary" data-act="closeInfo">Fermer</button></div>
 </dialog>
 
 <script>
+const APP_VERSION = '1.0.0';
+if (!window.claude) document.documentElement.classList.add('no-ai');
 const KEY_PLAIN = 'bilankine.v1', KEY_ENC = 'bilankine.enc', ITER = 310000;
 let S = { patients: [] };
 let cryptoKey = null, cryptoSalt = null;
@@ -613,7 +658,11 @@ function renderBackupInfo() {
 function renderSide() {
   renderBackupInfo();
   const q = ($('#q').value || '').trim().toLowerCase();
-  const list = S.patients.filter(p => `${p.nom} ${p.prenom}`.toLowerCase().includes(q))
+  const fin = p => p.statut === 'termine';
+  const na = S.patients.filter(p => !fin(p)).length, nt = S.patients.length - na;
+  $('#pf-actifs').textContent = `En cours (${na})`; $('#pf-termines').textContent = `Terminés (${nt})`;
+  $('#pf-actifs').classList.toggle('on', ui.pf !== 'termines'); $('#pf-termines').classList.toggle('on', ui.pf === 'termines');
+  const list = S.patients.filter(p => `${p.nom} ${p.prenom}`.toLowerCase().includes(q) && (q || (ui.pf === 'termines' ? fin(p) : !fin(p))))
     .sort((a, b) => (a.nom || '').localeCompare(b.nom || '', 'fr') || (a.prenom || '').localeCompare(b.prenom || '', 'fr'));
   $('#plist').innerHTML = list.length ? list.map(p => {
     const nb = p.bilans.length, ns = p.seances.length;
@@ -621,8 +670,8 @@ function renderSide() {
     if (nb) parts.push(`${nb} bilan${nb > 1 ? 's' : ''}`);
     if (ns) parts.push(`${ns} séance${ns > 1 ? 's' : ''}`);
     return `<button class="pitem${p.id === ui.pid ? ' on' : ''}" data-act="openP" data-id="${p.id}">
-      <span class="pn">${esc(pName(p))}</span><span class="pm">${parts.length ? parts.join(', ') : 'Aucun bilan'}</span></button>`;
-  }).join('') : `<p class="empty">${S.patients.length ? 'Aucun patient ne correspond à cette recherche.' : 'Créez votre premier patient pour commencer un bilan.'}</p>`;
+      <span class="pn">${esc(pName(p))}</span><span class="pm">${p.statut === 'termine' ? `Traitement terminé${p.finDate ? ' le ' + fdate(p.finDate) : ''}` : parts.length ? parts.join(', ') : 'Aucun bilan'}</span></button>`;
+  }).join('') : `<p class="empty">${!S.patients.length ? 'Créez votre premier patient pour commencer un bilan.' : q ? 'Aucun patient ne correspond à cette recherche.' : ui.pf === 'termines' ? 'Aucun traitement terminé pour l’instant.' : 'Aucun patient en cours. Les traitements terminés sont dans l’onglet « Terminés ».'}</p>`;
 }
 
 /* ---------- Main ---------- */
@@ -694,11 +743,12 @@ function memoCard(p, edit) {
   const lb = p.bilans.slice().sort(byDate).pop();
   const motif = lb ? (lb.diagMed || lb.motifType || 'Motif non renseigné') : 'Pas encore de bilan';
   const sub = lb ? `Bilan du ${fdate(lb.date)}${lb.prescripteur ? `, ${lb.prescripteur}` : ''}` : '';
+  const obj = lb && lb.objectifs && lb.objectifs.trim() ? `<div class="memo-obj"><b>Objectifs</b><p>${esc(lb.objectifs.trim())}</p></div>` : '';
   if (!edit) {
     if (!lb && !p.memo) return '';
-    return `<div class="memo"><div class="memo-col"><b>Motif</b><p class="memo-motif">${esc(motif)}</p>${p.memo ? `<p class="memo-note">${esc(p.memo)}</p>` : ''}</div></div>`;
+    return `<div class="memo"><div class="memo-col"><b>Motif</b><p class="memo-motif">${esc(motif)}</p>${p.memo ? `<p class="memo-note">${esc(p.memo)}</p>` : ''}${obj}</div></div>`;
   }
-  return `<div class="memo"><div class="memo-col"><b>Pourquoi il vient</b><p class="memo-motif">${esc(motif)}</p>${sub ? `<p class="memo-sub">${esc(sub)}</p>` : ''}
+  return `<div class="memo"><div class="memo-col"><b>Pourquoi il vient</b><p class="memo-motif">${esc(motif)}</p>${sub ? `<p class="memo-sub">${esc(sub)}</p>` : ''}${obj}
     <label class="f" style="margin-top:10px;display:block"><span>Note rapide</span><textarea data-pf="memo" rows="2" placeholder="Ex. : veut reprendre le tennis en mars">${esc(p.memo || '')}</textarea></label></div></div>`;
 }
 function patientView(p) {
@@ -708,10 +758,12 @@ function patientView(p) {
   return `<section class="pv">
     <button class="btn sm back" data-act="back">‹ Patients</button>
     <h1>${esc(pName(p))}</h1>
+    ${p.statut === 'termine' ? `<p class="badge-end">Traitement terminé${p.finDate ? ' le ' + fdate(p.finDate) : ''}</p>` : ''}
     <p class="meta">${[p.naissance ? `${age(p.naissance)}, né(e) le ${fdate(p.naissance)}` : '', p.tel ? esc(p.tel) : ''].filter(Boolean).join(', ') || 'Fiche à compléter'}</p>
     ${memoCard(p, true)}
     <div class="row">
       <button class="btn" data-act="editP">Modifier la fiche</button>
+      ${p.statut === 'termine' ? `<button class="btn" data-act="reopenP">Reprendre le traitement</button>` : `<button class="btn" data-act="endP">Fin de traitement</button>`}
       <button class="btn danger" data-act="delP">Supprimer le patient</button>
     </div>
     ${p.notes ? `<p style="white-space:pre-wrap;margin-top:16px">${esc(p.notes)}</p>` : ''}
@@ -797,6 +849,21 @@ function mRange(i, k, v) {
   return `<div class="mr"><button class="mr-v ${mClass(v)}" data-act="mClear" data-i="${i}" data-k="${k}" title="Effacer" aria-label="Cotation ${side} : ${has ? v : 'non évaluée'}">${has ? v : '—'}</button>
     <div class="mr-track"><input type="range" min="0" max="5" step="1" value="${has ? v : 0}" data-mr="1" data-i="${i}" data-k="${k}" class="${has ? '' : 'unset'}" aria-label="Cotation ${side}"><div class="mr-ticks"><span>0</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span></div></div></div>`;
 }
+function aRange(i, k, r) {
+  const [lo, hi] = angRange(r), v = r[k], has = v !== '' && v != null;
+  const n = r.n === '' || r.n == null ? null : +r.n, side = k === 'g' ? 'gauche' : 'droite';
+  const pos = n != null ? Math.max(0, Math.min(100, (n - lo) / (hi - lo) * 100)) : null;
+  return `<div class="mr ar"><button class="mr-v ar-v ${has ? (isLow(v, r.n) ? 'lo' : 'ok') : 'empty'}" data-act="aFine" data-i="${i}" data-k="${k}" aria-label="Réglage précis, côté ${side}">${has ? v + '°' : '—'}</button>
+    <div class="mr-track"><input type="range" min="${lo}" max="${hi}" step="5" value="${has ? v : (n != null ? n : lo)}" data-ar="1" data-i="${i}" data-k="${k}" class="${has ? '' : 'unset'}" aria-label="Amplitude ${side}">
+    <div class="ar-ticks"><span>${lo}°</span>${pos != null ? `<span class="nm" style="left:${pos}%" title="Norme">▲</span>` : ''}<span>${hi}°</span></div></div></div>`;
+}
+function aSet(el) {
+  const b = B(); if (!b) return;
+  const r = b.articulaire[+el.dataset.i]; if (!r) return;
+  r[el.dataset.k] = String(el.value); el.classList.remove('unset');
+  const btn = el.closest('.mr').querySelector('.mr-v'); btn.textContent = el.value + '°'; btn.className = 'mr-v ar-v ' + (isLow(el.value, r.n) ? 'lo' : 'ok');
+  saveSoon();
+}
 function mSet(el) {
   const b = B(); if (!b) return;
   const r = b.musculaire[+el.dataset.i]; if (!r) return;
@@ -804,7 +871,33 @@ function mSet(el) {
   const btn = el.closest('.mr').querySelector('.mr-v'); btn.textContent = el.value; btn.className = 'mr-v ' + mClass(el.value);
   saveSoon();
 }
-const isLow = (v, n) => n !== '' && +n > 0 && v !== '' && !isNaN(+v) && +v < 0.8 * +n;
+const isLow = (v, n) => {
+  if (v === '' || v == null || isNaN(+v) || n === '' || n == null || isNaN(+n)) return false;
+  return +n > 0 ? +v < setting('seuil') / 100 * +n : +v < 0;
+};
+function deficits(b) {
+  const out = [];
+  b.articulaire.forEach(r => ['g', 'd'].forEach(k => {
+    if (!isLow(r[k], r.n)) return;
+    const side = k === 'g' ? 'gauche' : 'droite';
+    out.push(+r.n === 0
+      ? { t: `${r.j}, ${String(r.m).toLowerCase()} ${side}`, d: `déficit de ${Math.abs(+r[k])}°` }
+      : { t: `${r.j}, ${String(r.m).toLowerCase()} ${side}`, d: `${r[k]}° pour une norme de ${r.n}° (${Math.round(100 * r[k] / r.n)} %)` });
+  }));
+  b.musculaire.forEach(r => ['g', 'd'].forEach(k => {
+    if (r[k] === '' || r[k] == null || +r[k] >= 5 || !r.m) return;
+    out.push({ t: `${r.m} ${k === 'g' ? 'gauche' : 'droit'}`, d: `force ${r[k]}/5` });
+  }));
+  return out;
+}
+function deficitsHTML(b) {
+  const L = deficits(b);
+  return `<h2>Points à travailler</h2>
+    <div class="todo">${L.length ? `<p class="hint" style="margin:0 0 8px">Valeurs hors norme relevées dans les bilans articulaire et musculaire : à travailler.</p>
+      <ul>${L.map(x => `<li><b>${esc(x.t)}</b> : ${esc(x.d)}</li>`).join('')}</ul>
+      <button class="btn sm" data-act="defToObj">Ajouter aux objectifs</button>`
+    : '<p class="hint" style="margin:0">Aucune valeur hors norme pour l’instant dans les bilans articulaire et musculaire.</p>'}</div>`;
+}
 
 function tabContent(b) {
   const prev = prevBilan();
@@ -845,16 +938,16 @@ function tabContent(b) {
       <div id="bodyzone">${bodyZone(b.marks, true)}</div>`;
     case 'articulaire': return `
       <h2>Bilan articulaire</h2>
-      <p class="hint">Touchez une articulation pour ajouter ses mouvements, puis une case pour régler l’angle sur le goniomètre. Les amplitudes inférieures à 80 % de la norme sont signalées${prev ? ', et les valeurs du bilan précédent s’affichent sous chaque case' : ''}.</p>
+      <p class="hint">Touchez une articulation pour ajouter ses mouvements, puis faites glisser les réglettes (par pas de 5°). La réglette part de la norme : si l’amplitude est normale, touchez-la simplement. Le repère ▲ indique la norme. Pour une valeur au degré près, touchez la valeur affichée. Les amplitudes sous ${setting('seuil')} % de la norme apparaissent en rouge${prev ? ', et les valeurs du bilan précédent s’affichent sous chaque case' : ''}.</p>
       <div class="chips">${Object.keys(NORMES).map(j => `<button class="chip" data-act="addJ" data-j="${esc(j)}">+ ${j}</button>`).join('')}<button class="chip" data-act="addRow" data-list="articulaire">+ Ligne libre</button></div>
-      ${b.articulaire.length ? `<div class="tbl"><table><thead><tr><th>Mouvement</th><th>Gauche (°)</th><th>Droite (°)</th><th>Norme (°)</th><th></th></tr></thead><tbody>
+      ${b.articulaire.length ? `<div class="tbl"><table style="min-width:740px"><thead><tr><th>Mouvement</th><th>Gauche (°)</th><th>Droite (°)</th><th>Norme (°)</th><th></th></tr></thead><tbody>
       ${b.articulaire.map((r, i) => {
         const pr = prev && prev.articulaire.find(x => x.j === r.j && x.m === r.m);
         const hint = k => pr && pr[k] !== '' && pr[k] !== undefined ? `<small>avant ${esc(pr[k])}°</small>` : '';
         return `<tr>
           <td class="mv">${r.free ? `<input type="text" data-list="articulaire" data-i="${i}" data-k="j" value="${esc(r.j)}" placeholder="Articulation" style="margin-bottom:6px"><input type="text" data-list="articulaire" data-i="${i}" data-k="m" value="${esc(r.m)}" placeholder="Mouvement">` : `<b>${esc(r.j)}</b><span>${esc(r.m)}</span>`}</td>
-          <td class="num${isLow(r.g, r.n) ? ' low' : ''}" data-c="g"><input class="ang-in" readonly data-ang="1" data-list="articulaire" data-i="${i}" data-k="g" value="${esc(r.g)}" placeholder="—" aria-label="Gauche, toucher pour mesurer">${hint('g')}</td>
-          <td class="num${isLow(r.d, r.n) ? ' low' : ''}" data-c="d"><input class="ang-in" readonly data-ang="1" data-list="articulaire" data-i="${i}" data-k="d" value="${esc(r.d)}" placeholder="—" aria-label="Droite, toucher pour mesurer">${hint('d')}</td>
+          <td>${aRange(i, 'g', r)}${hint('g')}</td>
+          <td>${aRange(i, 'd', r)}${hint('d')}</td>
           <td class="num"><input inputmode="decimal" data-list="articulaire" data-i="${i}" data-k="n" value="${esc(r.n)}" aria-label="Norme"></td>
           <td><button class="icon-btn" data-act="delRow" data-list="articulaire" data-i="${i}" aria-label="Supprimer la ligne">×</button></td></tr>`;
       }).join('')}</tbody></table></div>` : `<p class="empty">Aucune mesure pour l’instant.</p>`}
@@ -895,12 +988,13 @@ function tabContent(b) {
       }).join('')}</tbody></table></div>` : `<p class="empty">Aucun score pour l’instant.</p>`}
       <div class="fields" style="margin-top:20px">${fld('Bilan fonctionnel (marche, escaliers, activités quotidiennes…)', 'fonctionnel', 'area', '', true)}</div>`;
     case 'synthese': return `
-      <div class="fields">${fld('Diagnostic kinésithérapique', 'diagKine', 'area', 'Déficiences, limitations d’activité, restrictions de participation', true)}</div>
+      ${deficitsHTML(b)}
+      <div class="fields" style="margin-top:20px">${fld('Diagnostic kinésithérapique', 'diagKine', 'area', 'Déficiences, limitations d’activité, restrictions de participation', true)}</div>
       <div class="fields" style="margin-top:16px">
         ${fld('Objectifs', 'objectifs', 'area', 'À court et moyen terme', true)}
       </div>
-      <h2>Conseils pour les séances</h2>
-      <div class="sugg">
+      <h2 class="ai-only">Conseils pour les séances</h2>
+      <div class="sugg ai-only">
         <p class="hint" style="margin:0 0 12px">Claude propose des priorités, un déroulé de séance, une progression et des précautions à partir de ce bilan. Seules les données cliniques sont envoyées, sans nom ni date de naissance : évitez d’écrire des noms dans les champs texte.</p>
         <div class="row">
           <button class="btn primary sm" data-act="conseil" id="conseil-btn">${b.conseil ? 'Refaire une proposition' : 'Obtenir des conseils'}</button>
@@ -1086,7 +1180,7 @@ async function runConseil() {
   if (!(await askSend(L))) return;
   let sample = null;
   try { sample = window.claude ? await window.claude.use('sample') : null; } catch (_) {}
-  if (!sample) { err.textContent = 'Les conseils de Claude ne sont disponibles que dans la version claude.ai de l’application.'; return; }
+  if (!sample) { err.textContent = 'Les conseils ne sont pas disponibles dans cette vue. Ouvrez l’application depuis claude.ai.'; return; }
   err.textContent = '';
   conseilButtons(b, true);
   const show = html => { const o = $('#conseil-out'); if (o && ui.bid === b.id) o.innerHTML = html; };
@@ -1343,9 +1437,8 @@ function setupAngle() {
 function commitAngle(val) {
   const b = B(), s = angSel; if (!b || !s) return;
   const r = b.articulaire[s.i]; r[s.k] = val;
-  const inp = document.querySelector(`input[data-list="articulaire"][data-i="${s.i}"][data-k="${s.k}"]`);
-  if (inp) { inp.value = val; const tr = inp.closest('tr'); tr.querySelectorAll('td[data-c]').forEach(td => td.classList.toggle('low', isLow(r[td.dataset.c], r.n))); }
   saveSoon(); $('#angDlg').close(); angSel = null;
+  const sc = $('#main').scrollTop; renderMain(); $('#main').scrollTop = sc;
 }
 
 /* ---------- Dialogues ---------- */
@@ -1465,6 +1558,7 @@ ${art.length || b.obsArt ? `<h2>Bilan articulaire</h2>${table(['Mouvement', 'Gau
 ${mus.length || b.obsMusc ? `<h2>Bilan musculaire</h2>${table(['Muscle', 'Gauche', 'Droite'], mus.map(r => [r.m, r.g, r.d]))}${t('Observations', b.obsMusc)}` : ''}
 ${tests.length || scores.length || b.fonctionnel ? `<h2>Tests et scores</h2>${table(['Test', 'Côté', 'Résultat', 'Remarque'], tests.map(r => [r.t, r.cote, r.r, r.note]))}${table(['Score', 'Résultat'], scores.map(r => [r.s, r.v]))}${t('Bilan fonctionnel', b.fonctionnel)}` : ''}
 <h2>Synthèse</h2>
+${deficits(b).length ? `<h3>Points à travailler</h3><ul>${deficits(b).map(x => `<li>${esc(x.t)} : ${esc(x.d)}</li>`).join('')}</ul>` : ''}
 ${t('Diagnostic kinésithérapique', b.diagKine)}${t('Objectifs', b.objectifs)}${t('Plan de traitement', b.plan)}${b.seances ? `<h3>Nombre de séances prévu</h3><p>${esc(b.seances)}</p>` : ''}${t('Conseils donnés au patient', b.conseilsPatient)}${t('Notes', b.notes)}
 </body></html>`;
 }
@@ -1566,7 +1660,7 @@ async function exportPdf(filename, html) {
     return shareFile(filename, blob);
   } catch (e) { window.scrollTo(sx, sy); setStatus('Le PDF n’a pas pu être créé.'); }
 }
-const slug = s =>String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '');
+const slug = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '');
 
 /* ---------- Événements ---------- */
 function openView(fn) { fn(); renderSide(); renderMain(); $('#main').scrollTop = 0; }
@@ -1684,6 +1778,14 @@ document.addEventListener('click', async e => {
       }
       $('#cpDlg').close(); break;
     }
+    case 'defToObj': {
+      const cur = (b.objectifs || '').replace(/\s+$/, '');
+      const add = deficits(b).map(x => `Travailler ${x.t} : ${x.d}`).filter(l => !cur.includes(l));
+      if (add.length) { b.objectifs = (cur ? cur + '\n' : '') + add.map(l => '• ' + l).join('\n'); const ta = $('#f-objectifs'); if (ta) { ta.value = b.objectifs; autoGrow(ta); } saveSoon(); }
+      setStatus(add.length ? `${add.length} point${add.length > 1 ? 's' : ''} ajouté${add.length > 1 ? 's' : ''} aux objectifs.` : 'Déjà présents dans les objectifs.');
+      break;
+    }
+    case 'aFine': openAngle(+t.dataset.i, t.dataset.k); break;
     case 'mClear': {
       const r = b.musculaire[+t.dataset.i]; if (!r) break;
       r[t.dataset.k] = ''; t.textContent = '—'; t.className = 'mr-v empty';
@@ -1711,6 +1813,17 @@ document.addEventListener('click', async e => {
       break;
     }
     case 'lock': lockNow(); break;
+    case 'settings':
+      $('#app-version').textContent = APP_VERSION;
+      ['lockMin', 'bgMin', 'seuil'].forEach(k => { $(`[data-set="${k}"]`).value = String(setting(k)); });
+      $('#setDlg').showModal(); break;
+    case 'closeSettings': $('#setDlg').close(); if (P()) renderMain(); break;
+    case 'pf': ui.pf = t.dataset.v; renderSide(); break;
+    case 'endP':
+      if (await askConfirm(`Marquer le traitement de ${pName(p)} comme terminé ? La fiche passera dans « Terminés ». Pensez au bilan final si ce n’est pas fait.`, 'Fin de traitement')) {
+        p.statut = 'termine'; p.finDate = today(); save(); renderSide(); renderMain();
+      } break;
+    case 'reopenP': p.statut = ''; p.finDate = ''; save(); ui.pf = 'actifs'; renderSide(); renderMain(); break;
     case 'changeCode': ['old', 'new', 'new2'].forEach(k => $('#cc-' + k).value = ''); $('#cc-err').textContent = ''; $('#ccDlg').showModal(); break;
     case 'ccCancel': $('#ccDlg').close(); break;
     case 'ccSave': changeCode(); break;
@@ -1755,11 +1868,13 @@ function autoGrow(el) {
 }
 new MutationObserver(() => document.querySelectorAll('#main textarea').forEach(autoGrow)).observe($('#main'), { childList: true, subtree: true });
 document.addEventListener('input', e => { if (e.target.tagName === 'TEXTAREA') autoGrow(e.target); });
-document.addEventListener('input', e => { if (e.target.dataset && e.target.dataset.mr) mSet(e.target); });
-document.addEventListener('pointerup', e => { if (e.target.dataset && e.target.dataset.mr) mSet(e.target); });
+document.addEventListener('input', e => { if (!e.target.dataset) return; if (e.target.dataset.mr) mSet(e.target); if (e.target.dataset.ar) aSet(e.target); });
+document.addEventListener('pointerup', e => { if (!e.target.dataset) return; if (e.target.dataset.mr) mSet(e.target); if (e.target.dataset.ar) aSet(e.target); });
 document.addEventListener('input', onField);
 document.addEventListener('change', e => {
   if (e.target.id === 'imp') return;
+  if (e.target.dataset.set) { S.settings = { ...(S.settings || {}), [e.target.dataset.set]: +e.target.value }; save(); armIdle(); return; }
+  if (e.target.dataset.list === 'articulaire' && e.target.dataset.k === 'n') { onField(e); const sc = $('#main').scrollTop; renderMain(); $('#main').scrollTop = sc; return; }
   if (e.target.dataset.pick) { pickAdd(e.target); return; }
   onField(e);
   if (e.target.dataset.list === 'tests' && e.target.dataset.k === 't') renderMain();
@@ -1848,6 +1963,7 @@ async function lockGo() {
 function unlocked() {
   $('#lock').hidden = true; $('#app').hidden = false; $('#lk-code').value = ''; $('#lk-code2').value = '';
   ui.pid = ui.bid = ui.sid = null; renderSide(); renderMain(); armIdle();
+  try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (_) {}
 }
 async function lockNow() {
   if (!cryptoKey) return;
@@ -1883,12 +1999,14 @@ $('#lk-reset').addEventListener('click', async () => {
     showLock();
   }
 });
-const IDLE_MS = 5 * 60 * 1000; let idleT, hiddenAt = 0;
-function armIdle() { clearTimeout(idleT); if (cryptoKey) idleT = setTimeout(lockNow, IDLE_MS); }
+const SET_DEF = { lockMin: 5, bgMin: 1, seuil: 80 };
+const setting = k => (S.settings && S.settings[k] != null) ? +S.settings[k] : SET_DEF[k];
+let idleT, hiddenAt = 0;
+function armIdle() { clearTimeout(idleT); if (cryptoKey) idleT = setTimeout(lockNow, setting('lockMin') * 60000); }
 ['pointerdown', 'keydown', 'input'].forEach(ev => document.addEventListener(ev, armIdle, true));
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) { hiddenAt = Date.now(); if (cryptoKey) save(); }
-  else if (cryptoKey && Date.now() - hiddenAt > 60000) lockNow();
+  else if (cryptoKey && Date.now() - hiddenAt >= setting('bgMin') * 60000) lockNow();
 });
 
 setupAngle();
