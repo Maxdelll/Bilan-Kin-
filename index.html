@@ -149,6 +149,10 @@ svg.fig{width:100%;max-width:230px;height:auto;touch-action:manipulation;cursor:
 .bcard span{color:var(--muted);font-size:15px}
 .bcard .ev{font-family:var(--display);font-size:24px;font-weight:700;white-space:nowrap}
 .bcard .ev small{font-size:13px;color:var(--muted);font-family:var(--text);font-weight:400;display:block;text-align:right}
+.bcard .doc-ic{flex:none;font-size:12px;font-weight:700;letter-spacing:.04em;color:var(--pain);border:1.5px solid currentColor;border-radius:6px;padding:4px 6px}
+#docDlg{width:min(480px,94vw)}
+#docDlg .dlg-actions{flex-wrap:wrap}
+a.btn{text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
 .spark{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:20px}
 .spark p{margin:0 0 6px;font-weight:700;font-size:15px}
 .spark svg{width:100%;height:auto;display:block}
@@ -363,6 +367,7 @@ input.ang-in{cursor:pointer;caret-color:transparent}
   <main class="main" id="main"></main>
 </div>
 <input type="file" id="imp" accept=".json,application/json" hidden>
+<input type="file" id="docIn" accept="application/pdf,.pdf" multiple hidden>
 
 <dialog id="pdlg">
   <h2 id="pd-title">Nouveau patient</h2>
@@ -455,6 +460,17 @@ input.ang-in{cursor:pointer;caret-color:transparent}
   <div class="dlg-actions"><button class="btn" id="fd-no">Annuler</button><button class="btn primary" id="fd-ok">Enregistrer</button></div>
 </dialog>
 
+<dialog id="docDlg">
+  <h2 id="dd-name" style="word-break:break-all"></h2>
+  <p class="hint" id="dd-meta" style="margin:-6px 0 0"></p>
+  <div class="dlg-actions">
+    <button class="btn danger" data-act="docDel">Supprimer</button>
+    <button class="btn" data-act="docClose">Fermer</button>
+    <button class="btn" data-act="docShare">Enregistrer ou partager</button>
+    <a class="btn primary" id="dd-open" target="_blank" rel="noopener">Ouvrir</a>
+  </div>
+</dialog>
+
 <dialog id="setDlg">
   <h2>Paramètres</h2>
   <p class="hint" style="margin:-8px 0 14px">Version <span id="app-version"></span></p>
@@ -484,7 +500,7 @@ input.ang-in{cursor:pointer;caret-color:transparent}
 </dialog>
 
 <script>
-const APP_VERSION = '1.0.0';
+const APP_VERSION = '1.1.0';
 if (!window.claude) document.documentElement.classList.add('no-ai');
 const KEY_PLAIN = 'bilankine.v1', KEY_ENC = 'bilankine.enc', ITER = 310000;
 let S = { patients: [] };
@@ -521,6 +537,7 @@ function migrate() {
   S.patients.forEach(p => {
     p.seances = p.seances || [];
     p.bilans = p.bilans || [];
+    p.docs = p.docs || [];
     p.bilans.forEach(b => { b.marks = (b.marks || []).map(m => m.pts ? m : { v: m.v, k: m.k, pts: [[m.x, m.y]] }); });
   });
 }
@@ -562,6 +579,89 @@ function save() {
     const d = new Date(); setStatus(`Enregistré et chiffré à ${pad(d.getHours())}:${pad(d.getMinutes())}`);
   }).catch(() => setStatus('Enregistrement impossible sur cet appareil. Faites une sauvegarde.'));
   return saving;
+}
+
+/* ---------- Documents PDF ----------
+   Les fichiers sont chiffrés (AES-GCM) avec une clé aléatoire rangée dans S.docKey,
+   elle-même chiffrée avec le code d'accès. Changer le code ne touche donc pas aux fichiers.
+   Les octets chiffrés sont dans IndexedDB (localStorage est trop petit pour des PDF). */
+const DOC_MAX = 25 * 1024 * 1024;
+let docsDbP = null, docKeyObj = null, docKeyFor = null;
+function docsDb() {
+  return docsDbP = docsDbP || new Promise((res, rej) => {
+    const r = indexedDB.open('bilankine-docs', 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('docs');
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => { docsDbP = null; rej(r.error); };
+  });
+}
+async function idb(mode, fn) {
+  const db = await docsDb();
+  return new Promise((res, rej) => {
+    const tx = db.transaction('docs', mode), req = fn(tx.objectStore('docs'));
+    tx.oncomplete = () => res(req && req.result);
+    tx.onerror = tx.onabort = () => rej(tx.error);
+  });
+}
+const docPut = (id, v) => idb('readwrite', st => st.put(v, id));
+const docGet = id => idb('readonly', st => st.get(id));
+const docDelIds = ids => ids.length ? idb('readwrite', st => { ids.forEach(i => st.delete(i)); }) : Promise.resolve();
+const docKeys = () => idb('readonly', st => st.getAllKeys());
+const docClear = () => idb('readwrite', st => st.clear());
+async function getDocKey() {
+  if (!S.docKey) { S.docKey = b64(crypto.getRandomValues(new Uint8Array(32))); save(); }
+  if (docKeyFor !== S.docKey) {
+    docKeyObj = await crypto.subtle.importKey('raw', unb64(S.docKey), 'AES-GCM', false, ['encrypt', 'decrypt']);
+    docKeyFor = S.docKey;
+  }
+  return docKeyObj;
+}
+const fsize = n => n < 1048576 ? `${Math.max(1, Math.round(n / 1024))} Ko` : `${(n / 1048576).toFixed(1).replace('.', ',')} Mo`;
+const allDocIds = () => S.patients.flatMap(p => (p.docs || []).map(d => d.id));
+async function addDocs(p, files) {
+  let n = 0; const skip = [];
+  for (const f of files) {
+    if (!(f.type === 'application/pdf' || /\.pdf$/i.test(f.name))) { skip.push(`${f.name} (pas un PDF)`); continue; }
+    if (f.size > DOC_MAX) { skip.push(`${f.name} (plus de 25 Mo)`); continue; }
+    setStatus(`Chiffrement de ${f.name}…`);
+    try {
+      const iv = crypto.getRandomValues(new Uint8Array(12));
+      const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, await getDocKey(), await f.arrayBuffer());
+      const id = uid();
+      await docPut(id, { iv, ct });
+      p.docs.push({ id, name: f.name, date: today(), size: f.size }); n++;
+    } catch (e) { skip.push(`${f.name} (enregistrement impossible)`); }
+  }
+  if (n) await save();
+  if (P() === p && !ui.bid && !ui.sid) renderMain();
+  setStatus([n ? `${n} document${n > 1 ? 's' : ''} ajouté${n > 1 ? 's' : ''}.` : '', skip.length ? `Non ajouté : ${skip.join(', ')}.` : ''].filter(Boolean).join(' '));
+}
+let docOpen = null;
+async function openDoc(p, id) {
+  const meta = p.docs.find(d => d.id === id); if (!meta) return;
+  setStatus('Ouverture…');
+  let file;
+  try {
+    const v = await docGet(id);
+    if (!v) { setStatus('Ce document n’est pas sur cet appareil. Restaurez une sauvegarde qui le contient.'); return; }
+    const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: v.iv }, await getDocKey(), v.ct);
+    file = new File([pt], meta.name, { type: 'application/pdf' });
+  } catch (e) { setStatus('Le document n’a pas pu être ouvert.'); return; }
+  closeDoc();
+  docOpen = { p, id, file, url: URL.createObjectURL(file) };
+  $('#dd-name').textContent = meta.name;
+  $('#dd-meta').textContent = `Ajouté le ${fdate(meta.date)}, ${fsize(meta.size)}`;
+  $('#dd-open').href = docOpen.url;
+  setStatus(''); $('#docDlg').showModal();
+}
+function closeDoc() {
+  if ($('#docDlg').open) $('#docDlg').close();
+  if (docOpen) { const u = docOpen.url; setTimeout(() => URL.revokeObjectURL(u), 60000); docOpen = null; }
+  $('#dd-open').removeAttribute('href');
+}
+// Supprime d'IndexedDB les fichiers qui ne sont plus rattachés à aucun patient.
+async function purgeDocs() {
+  try { const keep = new Set(allDocIds()); await docDelIds((await docKeys()).filter(k => !keep.has(k))); } catch (_) {}
 }
 let saveT; function saveSoon() { clearTimeout(saveT); saveT = setTimeout(save, 350); }
 
@@ -783,6 +883,13 @@ function patientView(p) {
         <div><b>${esc(bTitle(b))}</b><span>${esc(trunc(b.motifType && b.motifType !== 'Autre' ? b.motifType + (b.motif ? ' : ' + b.motif : '') : (b.motif || b.diagMed || 'Motif non renseigné'), 90))}</span></div>
         <div class="ev">${b.evaAct !== '' ? b.evaAct : '—'}<small>EVA activité</small></div>
       </button>`).join('')}</div>` : ''}
+    <div class="sec-head"><h2>Documents${p.docs.length ? ` (${p.docs.length})` : ''}</h2>
+      <div class="row"><button class="btn primary sm" data-act="addDoc">Ajouter un PDF</button></div></div>
+    ${p.docs.length ? `<div class="blist">${p.docs.slice().sort((a, c) => (c.date || '').localeCompare(a.date || '')).map(d => `
+      <button class="bcard" data-act="openDoc" data-id="${d.id}">
+        <div><b>${esc(d.name)}</b><span>Ajouté le ${fdate(d.date)}, ${fsize(d.size)}</span></div>
+        <span class="doc-ic" aria-hidden="true">PDF</span>
+      </button>`).join('')}</div>` : `<p class="empty">Aucun document. Ajoutez ici l’ordonnance, un compte rendu d’imagerie ou un courrier du médecin, au format PDF. Les fichiers sont chiffrés avec votre code.</p>`}
   </section>`;
 }
 
@@ -1679,9 +1786,32 @@ document.addEventListener('click', async e => {
     case 'openP': openView(() => { ui.pid = t.dataset.id; ui.bid = null; ui.sid = null; }); break;
     case 'back': openView(() => { ui.pid = null; ui.bid = null; ui.sid = null; }); break;
     case 'delP':
-      if (await askConfirm(`Supprimer ${pName(p)}, ses bilans et ses séances ?`)) {
+      if (await askConfirm(`Supprimer ${pName(p)}, ses bilans, ses séances${p.docs.length ? ' et ses documents' : ''} ?`)) {
+        const ids = p.docs.map(d => d.id);
         S.patients = S.patients.filter(x => x !== p); ui.pid = ui.bid = ui.sid = null; save(); renderSide(); renderMain();
+        docDelIds(ids).catch(() => {});
       } break;
+    case 'addDoc': $('#docIn').value = ''; $('#docIn').click(); break;
+    case 'openDoc': openDoc(p, t.dataset.id); break;
+    case 'docClose': closeDoc(); break;
+    case 'docShare': {
+      if (!docOpen) break;
+      const f = docOpen.file;
+      if (navigator.canShare && navigator.canShare({ files: [f] })) {
+        try { await navigator.share({ files: [f] }); } catch (err) { if (!err || err.name !== 'AbortError') downloadFile(f); }
+      } else downloadFile(f);
+      break;
+    }
+    case 'docDel': {
+      if (!docOpen) break;
+      const { p: dp, id } = docOpen, meta = dp.docs.find(d => d.id === id);
+      docOpen.keep = true; $('#docDlg').close();
+      if (meta && await askConfirm(`Supprimer le document « ${meta.name} » ?`)) {
+        dp.docs = dp.docs.filter(d => d.id !== id); await save(); docDelIds([id]).catch(() => {});
+        closeDoc(); renderMain(); setStatus('Document supprimé.');
+      } else if (docOpen) { docOpen.keep = false; $('#docDlg').showModal(); }
+      break;
+    }
     case 'newB': openMotif(); break;
     case 'mtPick': { const k = t.dataset.k, m = MOTIFS[k]; mtSel = { motif: k, cote: mtSel ? mtSel.cote : '', j: new Set(m.j), m: new Set(m.m), t: new Set(m.t), s: new Set(m.s) }; renderMotif(); $('#mt-ok').disabled = false; break; }
     case 'mtCote': mtSel.cote = mtSel.cote === t.dataset.c ? '' : t.dataset.c; renderMotif(); break;
@@ -1807,7 +1937,13 @@ document.addEventListener('click', async e => {
     case 'exportSuivi': save(); exportPdf(`Suivi-${slug(p.nom)}-${slug(p.prenom)}-${today()}.pdf`, suiviHTML(p)); break;
     case 'backup': {
       await save(); const env = lastEnv || readEnc();
-      if (env && await offerFile(`sauvegarde-bilans-${today()}.json`, JSON.stringify({ app: 'bilan-kine', format: 'chiffré', date: new Date().toISOString(), ...env }))) {
+      // Les PDF restent chiffrés avec la clé des documents, elle-même dans les données chiffrées.
+      const docs = {};
+      for (const id of allDocIds()) {
+        try { const v = await docGet(id); if (v) docs[id] = { iv: b64(v.iv), ct: b64(v.ct) }; } catch (_) {}
+      }
+      const extra = Object.keys(docs).length ? { docs } : {};
+      if (env && await offerFile(`sauvegarde-bilans-${today()}.json`, JSON.stringify({ app: 'bilan-kine', format: 'chiffré', date: new Date().toISOString(), ...env, ...extra }))) {
         S.lastBackup = new Date().toISOString(); save(); renderBackupInfo();
       }
       break;
@@ -1888,10 +2024,16 @@ function askCode() {
     d.showModal();
   });
 }
+$('#docIn').addEventListener('change', e => {
+  const p = P(), files = [...(e.target.files || [])];
+  if (p && files.length) addDocs(p, files);
+});
+$('#docDlg').addEventListener('close', () => { if (docOpen && !docOpen.keep) closeDoc(); });
 $('#imp').addEventListener('change', async e => {
   const f = e.target.files && e.target.files[0]; if (!f) return;
   let d;
   try { d = JSON.parse(await f.text()); } catch (err) { setStatus('Ce fichier n’est pas une sauvegarde valide.'); return; }
+  const bdocs = d && d.docs && typeof d.docs === 'object' ? d.docs : {};
   try {
     if (d && d.ct && d.iv && d.salt) {
       let data = null;
@@ -1905,7 +2047,17 @@ $('#imp').addEventListener('change', async e => {
     if (!d || !Array.isArray(d.patients)) throw new Error('format');
     const n = d.patients.length;
     if (await askConfirm(`Remplacer les données de cet iPad par la sauvegarde (${n} patient${n > 1 ? 's' : ''}) ?`, 'Remplacer')) {
-      S = { patients: d.patients }; migrate(); ui.pid = ui.bid = ui.sid = null; await save(); renderSide(); renderMain(); setStatus('Sauvegarde restaurée.');
+      S = { patients: d.patients }; if (d.docKey) S.docKey = d.docKey; if (d.settings) S.settings = d.settings;
+      migrate(); ui.pid = ui.bid = ui.sid = null; await save();
+      let miss = 0;
+      for (const id of allDocIds()) {
+        const v = bdocs[id];
+        if (v) { try { await docPut(id, { iv: unb64(v.iv), ct: unb64(v.ct) }); } catch (_) { miss++; } }
+        else { try { if (!await docGet(id)) miss++; } catch (_) { miss++; } }
+      }
+      await purgeDocs();
+      renderSide(); renderMain();
+      setStatus(miss ? `Sauvegarde restaurée, mais ${miss} document${miss > 1 ? 's' : ''} PDF manque${miss > 1 ? 'nt' : ''} dans ce fichier.` : 'Sauvegarde restaurée.');
     }
   } catch (err) { setStatus('Ce fichier n’est pas une sauvegarde valide.'); }
 });
@@ -1970,6 +2122,7 @@ async function lockNow() {
   clearTimeout(saveT); clearTimeout(idleT);
   if (conseilCtl) conseilCtl.abort();
   await save();
+  closeDoc(); docKeyObj = null; docKeyFor = null;
   cryptoKey = null; S = { patients: [] }; ui.pid = ui.bid = ui.sid = null;
   document.querySelectorAll('dialog[open]').forEach(d => d.close());
   $('#main').innerHTML = ''; $('#plist').innerHTML = ''; $('#q').value = '';
@@ -1994,6 +2147,7 @@ $('#lk-go').addEventListener('click', lockGo);
 $('#lk-reset').addEventListener('click', async () => {
   if (await askConfirm('Effacer définitivement toutes les données de l’application sur cet appareil ? Vous pourrez ensuite restaurer une sauvegarde avec son code.', 'Tout effacer')) {
     try { localStorage.removeItem(KEY_ENC); localStorage.removeItem(KEY_PLAIN); } catch (_) {}
+    try { await docClear(); } catch (_) {}
     lastEnv = null;
     try { const v = await getVault(); if (v) await v.delete(); } catch (_) {}
     showLock();
