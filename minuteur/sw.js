@@ -1,5 +1,5 @@
 // Cache hors ligne du minuteur. Changez VERSION après chaque mise à jour de index.html.
-const VERSION = 'minuteur-v2';
+const VERSION = 'minuteur-v3';
 const FILES = ['./', 'index.html', 'manifest.webmanifest', 'icon-180.png', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', e => {
@@ -19,7 +19,7 @@ self.addEventListener('fetch', e => {
     return;
   }
   if (url.origin !== location.origin) return;
-  e.respondWith(fetch(e.request)
+  e.respondWith(fetch(e.request, { cache: 'no-cache' })
     .then(r => { const copy = r.clone(); caches.open(VERSION).then(c => c.put(e.request, copy)); return r; })
     .catch(() => caches.match(e.request, { ignoreSearch: true }).then(hit => hit || caches.match('index.html'))));
 });
