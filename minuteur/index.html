@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Minuteur séance</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Minuteur">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#111416">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;800&family=Barlow:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#111416;--panel:#1B2024;--panel2:#242B30;--ink:#F2F5F3;--muted:#9AA6A1;--line:#2F383D;
+  --accent:#3EE08F;--accent-ink:#06210F;
+  --c-prepare:#FFC23D;--c-work:#3EE08F;--c-rest:#4FA8FF;--c-setrest:#B48CFF;--c-cool:#7FD6D0;--c-done:#F2F5F3;
+  --digits:"Barlow Condensed","Arial Narrow","Roboto Condensed",system-ui,sans-serif;
+  --text:"Barlow","Helvetica Neue",Arial,system-ui,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:var(--text);overscroll-behavior:none}
+body{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;touch-action:manipulation}
+input{font:inherit;color:inherit}
+.hidden{display:none!important}
+
+/* ---------- Accueil ---------- */
+.home{max-width:640px;margin:0 auto;padding:16px 16px 120px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0 16px}
+.top h1{font-family:var(--digits);font-weight:800;font-size:34px;letter-spacing:.5px;margin:0;text-transform:uppercase}
+.top h1 span{color:var(--accent)}
+.iconbtn{width:44px;height:44px;border-radius:12px;background:var(--panel);display:grid;place-items:center}
+.iconbtn svg{width:22px;height:22px}
+.card{background:var(--panel);border-radius:18px;padding:16px;margin-bottom:12px}
+.preset{display:flex;align-items:center;gap:12px}
+.preset .info{flex:1;min-width:0}
+.preset .name{font-weight:700;font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.preset .meta{color:var(--muted);font-size:14px;margin-top:4px}
+.preset .total{font-family:var(--digits);font-weight:800;font-size:26px}
+.play{width:52px;height:52px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;flex:none}
+.play svg{width:22px;height:22px}
+.preset .edit{color:var(--muted);width:40px;height:40px;display:grid;place-items:center;border-radius:10px}
+.section-title{color:var(--muted);font-size:13px;letter-spacing:1px;text-transform:uppercase;margin:24px 4px 10px;font-weight:700}
+.fab{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom));background:var(--accent);color:var(--accent-ink);
+  font-weight:700;padding:16px 26px;border-radius:999px;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.4);font-size:17px;display:flex;gap:8px;align-items:center}
+
+/* ---------- Éditeur ---------- */
+.row{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:0}
+.row .lbl{flex:1;min-width:0}
+.row .lbl b{display:block;font-size:16px}
+.row .lbl small{color:var(--muted);font-size:13px}
+.dot{width:12px;height:12px;border-radius:50%;flex:none}
+.stepper{display:flex;align-items:center;gap:6px}
+.stepper button{width:40px;height:40px;border-radius:10px;background:var(--panel2);font-size:22px;font-weight:700;display:grid;place-items:center}
+.stepper input{width:70px;text-align:center;background:transparent;border:0;font-family:var(--digits);font-weight:800;font-size:26px;padding:0}
+.stepper input:focus{outline:2px solid var(--accent);border-radius:8px}
+.namefield{width:100%;background:var(--panel2);border:0;border-radius:12px;padding:14px;font-size:18px;font-weight:700}
+.namefield:focus{outline:2px solid var(--accent)}
+.sumbar{display:flex;justify-content:space-between;align-items:baseline;margin:6px 4px 16px;color:var(--muted)}
+.sumbar b{font-family:var(--digits);font-size:30px;color:var(--ink)}
+.btns{display:flex;gap:10px;margin-top:8px}
+.btn{flex:1;padding:16px;border-radius:14px;background:var(--panel2);font-weight:700;font-size:16px}
+.btn.primary{background:var(--accent);color:var(--accent-ink)}
+.btn.danger{color:#FF7A6B}
+.toggle{width:52px;height:32px;border-radius:999px;background:var(--panel2);position:relative;flex:none;transition:background .15s}
+.toggle::after{content:"";position:absolute;top:4px;left:4px;width:24px;height:24px;border-radius:50%;background:var(--muted);transition:transform .15s,background .15s}
+.toggle[aria-checked="true"]{background:var(--accent)}
+.toggle[aria-checked="true"]::after{transform:translateX(20px);background:var(--accent-ink)}
+
+/* ---------- Écran de course ---------- */
+.run{position:fixed;inset:0;display:flex;flex-direction:column;background:var(--phase);color:#0B0F0D;
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  transition:background .25s;user-select:none;-webkit-user-select:none;overflow:hidden}
+.run[data-phase="prepare"]{--phase:var(--c-prepare)}
+.run[data-phase="work"]{--phase:var(--c-work)}
+.run[data-phase="rest"]{--phase:var(--c-rest)}
+.run[data-phase="setrest"]{--phase:var(--c-setrest)}
+.run[data-phase="cooldown"]{--phase:var(--c-cool)}
+.run[data-phase="done"]{--phase:var(--c-done)}
+.run .bar{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;gap:10px}
+.run .bar .iconbtn{background:rgba(0,0,0,.12)}
+.run .elapsed{font-family:var(--digits);font-weight:800;font-size:22px;text-align:center;line-height:1.1}
+.run .elapsed small{display:block;font-family:var(--text);font-weight:700;font-size:11px;letter-spacing:1px;text-transform:uppercase;opacity:.65}
+.run .main{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:0;position:relative}
+.run .phase{font-family:var(--digits);font-weight:800;text-transform:uppercase;letter-spacing:2px;font-size:clamp(28px,8vw,56px)}
+.run .clock{font-family:var(--digits);font-weight:800;line-height:.9;font-variant-numeric:tabular-nums;font-size:min(34vw,44vh);letter-spacing:-2px}
+.run .counts{display:flex;gap:28px;margin-top:6px;font-weight:700}
+.run .counts div{text-align:center}
+.run .counts b{display:block;font-family:var(--digits);font-size:clamp(30px,8vw,48px);line-height:1}
+.run .counts small{font-size:12px;letter-spacing:1px;text-transform:uppercase;opacity:.7}
+.run .progress{height:8px;background:rgba(0,0,0,.15);margin:0 16px;border-radius:999px;overflow:hidden}
+.run .progress i{display:block;height:100%;width:0;background:#0B0F0D;border-radius:999px}
+.run .next{display:flex;align-items:center;justify-content:space-between;margin:12px 16px 0;padding:12px 16px;border-radius:16px;background:rgba(0,0,0,.14)}
+.run .next small{display:block;font-size:11px;letter-spacing:1px;text-transform:uppercase;opacity:.7;font-weight:700}
+.run .next b{font-family:var(--digits);font-size:28px;text-transform:uppercase}
+.run .next .t{font-family:var(--digits);font-weight:800;font-size:28px}
+.run .controls{display:flex;justify-content:center;align-items:center;gap:22px;padding:16px}
+.run .controls button{width:60px;height:60px;border-radius:50%;background:rgba(0,0,0,.14);display:grid;place-items:center}
+.run .controls button svg{width:26px;height:26px}
+.run .controls .big{width:84px;height:84px;background:#0B0F0D;color:var(--phase)}
+.run .controls .big svg{width:34px;height:34px}
+.run .paused-tag{position:absolute;top:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;font-size:13px;background:#0B0F0D;color:var(--phase);padding:6px 12px;border-radius:999px}
+.run.locked .controls button:not(#lockBtn),.run.locked .bar button{opacity:.25;pointer-events:none}
+.flash{animation:flash .35s}
+@keyframes flash{0%{filter:brightness(1.6)}100%{filter:none}}
+
+/* Paysage : chiffres géants, colonne d'infos à droite */
+@media (orientation:landscape) and (max-height:600px){
+  .run{flex-direction:row}
+  .run .bar{position:absolute;top:0;left:0;right:0;z-index:2;padding-top:max(10px,env(safe-area-inset-top))}
+  .run .main{flex:1;padding-top:30px}
+  .run .phase{font-size:9vh}
+  .run .clock{font-size:min(52vh,24vw)}
+  .run .side{width:min(260px,32vw);display:flex;flex-direction:column;justify-content:center;background:rgba(0,0,0,.1);padding-top:56px}
+  .run .progress{margin:0 14px}
+  .run .next{margin:12px 14px 0}
+  .run .controls{flex-wrap:wrap;gap:12px}
+  .run .controls button{width:52px;height:52px}
+  .run .controls .big{width:68px;height:68px}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ ACCUEIL ============ -->
+<section id="home" class="home">
+  <div class="top">
+    <h1>Minuteur <span>séance</span></h1>
+    <button class="iconbtn" id="settingsBtn" aria-label="Réglages">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+    </button>
+  </div>
+  <div id="presetList"></div>
+  <button class="fab" id="newBtn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Nouveau minuteur</button>
+</section>
+
+<!-- ============ ÉDITEUR ============ -->
+<section id="editor" class="home hidden">
+  <div class="top">
+    <button class="iconbtn" id="editBack" aria-label="Retour"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <h1 id="editTitle" style="font-size:26px">Nouveau</h1>
+    <span style="width:44px"></span>
+  </div>
+  <input id="fName" class="namefield" placeholder="Nom de la séance" maxlength="40">
+  <div class="sumbar"><span>Durée totale</span><b id="fTotal">0:00</b></div>
+  <div class="card" id="fields"></div>
+  <div class="btns">
+    <button class="btn danger" id="delBtn">Supprimer</button>
+    <button class="btn primary" id="saveBtn">Enregistrer</button>
+  </div>
+  <div class="btns"><button class="btn primary" id="saveStartBtn">Enregistrer et démarrer</button></div>
+</section>
+
+<!-- ============ RÉGLAGES ============ -->
+<section id="settings" class="home hidden">
+  <div class="top">
+    <button class="iconbtn" id="setBack" aria-label="Retour"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <h1 style="font-size:26px">Réglages</h1>
+    <span style="width:44px"></span>
+  </div>
+  <div class="card" id="settingsList"></div>
+  <p style="color:var(--muted);font-size:14px;line-height:1.5;padding:0 4px">Astuce : sur iPhone, ouvrez cette page dans Safari puis « Partager › Sur l'écran d'accueil » pour l'utiliser comme une appli, même hors connexion. Pendant une séance, l'écran reste allumé ; tournez le téléphone pour des chiffres plus grands.</p>
+</section>
+
+<!-- ============ COURSE ============ -->
+<section id="run" class="run hidden" data-phase="prepare">
+  <div class="bar">
+    <button class="iconbtn" id="closeBtn" aria-label="Arrêter"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <div class="elapsed"><small>Écoulé</small><span id="rElapsed">0:00</span></div>
+    <div class="elapsed"><small>Restant</small><span id="rLeft">0:00</span></div>
+    <button class="iconbtn" id="soundBtn" aria-label="Son"></button>
+  </div>
+  <div class="main" id="tapArea">
+    <div class="paused-tag hidden" id="pausedTag">En pause</div>
+    <div class="phase" id="rPhase">Prépare-toi</div>
+    <div class="clock" id="rClock">0:10</div>
+    <div class="counts">
+      <div><b id="rRound">1/8</b><small>Tour</small></div>
+      <div id="setBox"><b id="rSet">1/1</b><small>Série</small></div>
+    </div>
+  </div>
+  <div class="side">
+    <div class="progress"><i id="rProg"></i></div>
+    <div class="next"><div><small>À suivre</small><b id="rNext">Effort</b></div><span class="t" id="rNextT">0:20</span></div>
+    <div class="controls">
+      <button id="prevBtn" aria-label="Phase précédente"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h2v14H6zM20 5v14L9 12z"/></svg></button>
+      <button class="big" id="pauseBtn" aria-label="Pause"></button>
+      <button id="nextBtn" aria-label="Phase suivante"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 5h2v14h-2zM4 5v14l11-7z"/></svg></button>
+      <button id="lockBtn" aria-label="Verrouiller les boutons"></button>
+    </div>
+  </div>
+</section>
+
+<script>
+'use strict';
+/* ---------- Stockage (tout en try/catch : navigation privée, etc.) ---------- */
+const store = {
+  get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+};
+const uid = () => Math.random().toString(36).slice(2, 10);
+
+const DEFAULTS = [
+  {id:'tabata', name:'Tabata', prepare:10, work:20, rest:10, rounds:8, sets:1, setRest:60, cooldown:0},
+  {id:'hiit', name:'HIIT 40/20', prepare:10, work:40, rest:20, rounds:10, sets:1, setRest:60, cooldown:0},
+  {id:'circuit', name:'Circuit 3 séries', prepare:10, work:45, rest:15, rounds:6, sets:3, setRest:90, cooldown:60},
+  {id:'gainage', name:'Gainage', prepare:5, work:30, rest:15, rounds:5, sets:1, setRest:60, cooldown:0},
+];
+let presets = store.get('mt.presets', null) || DEFAULTS.map(p => ({...p}));
+let settings = Object.assign({sound:true, voice:true, vibrate:true, beeps:3}, store.get('mt.settings', {}));
+const savePresets = () => store.set('mt.presets', presets);
+const saveSettings = () => store.set('mt.settings', settings);
+
+/* ---------- Utilitaires ---------- */
+const $ = id => document.getElementById(id);
+const fmt = s => { s = Math.max(0, Math.round(s)); const h = Math.floor(s/3600), m = Math.floor(s%3600/60), x = s%60;
+  return (h ? h + ':' + String(m).padStart(2,'0') : m) + ':' + String(x).padStart(2,'0'); };
+const parseTime = str => { str = String(str).trim(); if(!str) return 0;
+  const p = str.split(/[:.,'\s]+/).map(n => parseInt(n,10) || 0);
+  return p.length === 1 ? p[0] : p.length === 2 ? p[0]*60 + p[1] : p[0]*3600 + p[1]*60 + p[2]; };
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+const PHASE_NAMES = {prepare:'Prépare-toi', work:'Effort', rest:'Repos', setrest:'Repos série', cooldown:'Retour au calme', done:'Terminé'};
+const PHASE_VOICE = {prepare:'Préparez-vous', work:'Effort', rest:'Repos', setrest:'Repos entre les séries', cooldown:'Retour au calme', done:'Séance terminée, bravo'};
+
+/* Construit la liste des phases d'une séance */
+function buildPlan(p){
+  const plan = [];
+  if(p.prepare > 0) plan.push({type:'prepare', dur:p.prepare, round:1, set:1});
+  for(let s = 1; s <= p.sets; s++){
+    for(let r = 1; r <= p.rounds; r++){
+      plan.push({type:'work', dur:p.work, round:r, set:s});
+      const lastRound = r === p.rounds, lastSet = s === p.sets;
+      if(!lastRound && p.rest > 0) plan.push({type:'rest', dur:p.rest, round:r, set:s});
+      else if(lastRound && !lastSet){
+        if(p.setRest > 0) plan.push({type:'setrest', dur:p.setRest, round:r, set:s});
+        else if(p.rest > 0) plan.push({type:'rest', dur:p.rest, round:r, set:s});
+      }
+    }
+  }
+  if(p.cooldown > 0) plan.push({type:'cooldown', dur:p.cooldown, round:p.rounds, set:p.sets});
+  return plan;
+}
+const totalOf = p => buildPlan(p).reduce((a, x) => a + x.dur, 0);
+
+/* ---------- Navigation ---------- */
+function show(id){
+  ['home','editor','settings','run'].forEach(s => $(s).classList.toggle('hidden', s !== id));
+  window.scrollTo(0, 0);
+}
+
+/* ---------- Accueil ---------- */
+const ICON_PLAY = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4v16l13-8z"/></svg>';
+const ICON_PAUSE = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>';
+function renderHome(){
+  const list = $('presetList');
+  if(!presets.length){ list.innerHTML = '<div class="card" style="color:var(--muted)">Aucun minuteur. Créez-en un avec le bouton ci-dessous.</div>'; return; }
+  list.innerHTML = '<div class="section-title">Mes séances</div>' + presets.map(p => `
+    <div class="card preset">
+      <button class="play" data-start="${p.id}" aria-label="Démarrer ${esc(p.name)}">${ICON_PLAY}</button>
+      <div class="info" data-edit="${p.id}" role="button">
+        <div class="name">${esc(p.name)}</div>
+        <div class="meta">${fmt(p.work)} effort · ${fmt(p.rest)} repos · ${p.rounds} tours${p.sets > 1 ? ' × ' + p.sets + ' séries' : ''}</div>
+      </div>
+      <div class="total">${fmt(totalOf(p))}</div>
+      <button class="edit" data-edit="${p.id}" aria-label="Modifier"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
+    </div>`).join('');
+}
+$('presetList').addEventListener('click', e => {
+  const s = e.target.closest('[data-start]'); if(s){ startRun(presets.find(p => p.id === s.dataset.start)); return; }
+  const ed = e.target.closest('[data-edit]'); if(ed) openEditor(presets.find(p => p.id === ed.dataset.edit));
+});
+$('newBtn').onclick = () => openEditor(null);
+$('settingsBtn').onclick = () => { renderSettings(); show('settings'); };
+$('setBack').onclick = () => show('home');
+
+/* ---------- Éditeur ---------- */
+const FIELDS = [
+  {k:'prepare', label:'Préparation', hint:'Avant de commencer', type:'time', color:'--c-prepare', step:5, min:0},
+  {k:'work', label:'Effort', hint:'Durée de travail', type:'time', color:'--c-work', step:5, min:1},
+  {k:'rest', label:'Repos', hint:'Entre deux tours', type:'time', color:'--c-rest', step:5, min:0},
+  {k:'rounds', label:'Tours', hint:'Effort + repos', type:'count', step:1, min:1},
+  {k:'sets', label:'Séries', hint:'Nombre de blocs de tours', type:'count', step:1, min:1},
+  {k:'setRest', label:'Repos entre séries', hint:'Après chaque série', type:'time', color:'--c-setrest', step:15, min:0},
+  {k:'cooldown', label:'Retour au calme', hint:'À la fin', type:'time', color:'--c-cool', step:15, min:0},
+];
+let draft = null, draftIsNew = false;
+function openEditor(p){
+  draftIsNew = !p;
+  draft = p ? {...p} : {id:uid(), name:'', prepare:10, work:30, rest:15, rounds:8, sets:1, setRest:60, cooldown:0};
+  $('editTitle').textContent = p ? 'Modifier' : 'Nouveau';
+  $('fName').value = draft.name;
+  $('delBtn').classList.toggle('hidden', draftIsNew);
+  $('fields').innerHTML = FIELDS.map(f => `
+    <div class="row" data-k="${f.k}">
+      ${f.color ? `<span class="dot" style="background:var(${f.color})"></span>` : '<span class="dot" style="background:var(--muted)"></span>'}
+      <div class="lbl"><b>${f.label}</b><small>${f.hint}</small></div>
+      <div class="stepper">
+        <button data-d="-1" aria-label="Moins">−</button>
+        <input inputmode="${f.type === 'time' ? 'text' : 'numeric'}" aria-label="${f.label}">
+        <button data-d="1" aria-label="Plus">+</button>
+      </div>
+    </div>`).join('');
+  refreshFields();
+  show('editor');
+}
+function refreshFields(){
+  FIELDS.forEach(f => {
+    const inp = $('fields').querySelector(`[data-k="${f.k}"] input`);
+    if(document.activeElement !== inp) inp.value = f.type === 'time' ? fmt(draft[f.k]) : draft[f.k];
+  });
+  const setRow = $('fields').querySelector('[data-k="setRest"]');
+  setRow.style.opacity = draft.sets > 1 ? 1 : .4;
+  $('fTotal').textContent = fmt(totalOf(draft));
+}
+function bump(k, dir){
+  const f = FIELDS.find(x => x.k === k);
+  let v = draft[k] + dir * f.step;
+  if(f.type === 'time' && dir > 0 && draft[k] < f.step && draft[k] % f.step) v = f.step;
+  draft[k] = Math.min(f.type === 'time' ? 5999 : 99, Math.max(f.min, v));
+  refreshFields();
+}
+// appui long = répétition
+let holdT = null;
+$('fields').addEventListener('pointerdown', e => {
+  const b = e.target.closest('button[data-d]'); if(!b) return;
+  e.preventDefault();
+  const k = b.closest('.row').dataset.k, d = +b.dataset.d;
+  bump(k, d);
+  let delay = 400;
+  const rep = () => { bump(k, d); delay = Math.max(60, delay * .8); holdT = setTimeout(rep, delay); };
+  holdT = setTimeout(rep, delay);
+});
+['pointerup','pointercancel','pointerleave'].forEach(ev => $('fields').addEventListener(ev, () => clearTimeout(holdT)));
+$('fields').addEventListener('change', e => {
+  const row = e.target.closest('.row'); if(!row) return;
+  const f = FIELDS.find(x => x.k === row.dataset.k);
+  const v = f.type === 'time' ? parseTime(e.target.value) : parseInt(e.target.value, 10) || 0;
+  draft[f.k] = Math.min(f.type === 'time' ? 5999 : 99, Math.max(f.min, v));
+  e.target.blur(); refreshFields();
+});
+$('fields').addEventListener('focusin', e => { if(e.target.tagName === 'INPUT') setTimeout(() => e.target.select(), 0); });
+$('fName').oninput = e => draft.name = e.target.value;
+function commit(){
+  draft.name = draft.name.trim() || 'Séance ' + fmt(totalOf(draft));
+  const i = presets.findIndex(p => p.id === draft.id);
+  if(i >= 0) presets[i] = draft; else presets.unshift(draft);
+  savePresets(); renderHome();
+}
+$('saveBtn').onclick = () => { document.activeElement.blur(); commit(); show('home'); };
+$('saveStartBtn').onclick = () => { document.activeElement.blur(); commit(); startRun(draft); };
+$('editBack').onclick = () => show('home');
+$('delBtn').onclick = () => {
+  if(!confirm('Supprimer « ' + draft.name + ' » ?')) return;
+  presets = presets.filter(p => p.id !== draft.id); savePresets(); renderHome(); show('home');
+};
+
+/* ---------- Réglages ---------- */
+const SETTINGS = [
+  {k:'sound', label:'Bips sonores', hint:'Décompte et changement de phase'},
+  {k:'voice', label:'Annonces vocales', hint:'« Effort », « Repos »… en français'},
+  {k:'vibrate', label:'Vibrations', hint:'Si le téléphone le permet'},
+];
+function renderSettings(){
+  $('settingsList').innerHTML = SETTINGS.map(s => `
+    <div class="row"><div class="lbl"><b>${s.label}</b><small>${s.hint}</small></div>
+    <button class="toggle" role="switch" aria-checked="${!!settings[s.k]}" data-s="${s.k}" aria-label="${s.label}"></button></div>`).join('') + `
+    <div class="row"><div class="lbl"><b>Décompte sonore</b><small>Bips sur les dernières secondes</small></div>
+    <div class="stepper"><button data-b="-1">−</button><input readonly value="${settings.beeps} s" style="width:56px"><button data-b="1">+</button></div></div>
+    <div class="row"><div class="lbl"><b>Séances par défaut</b><small>Remet les 4 exemples</small></div>
+    <button class="btn" style="flex:none;padding:10px 14px" id="resetBtn">Restaurer</button></div>`;
+}
+$('settingsList').addEventListener('click', e => {
+  const t = e.target.closest('[data-s]');
+  if(t){ settings[t.dataset.s] = !settings[t.dataset.s]; saveSettings(); renderSettings(); unlockAudio(); if(t.dataset.s === 'sound' && settings.sound) beep(880, .15); return; }
+  const b = e.target.closest('[data-b]');
+  if(b){ settings.beeps = Math.min(10, Math.max(0, settings.beeps + +b.dataset.b)); saveSettings(); renderSettings(); return; }
+  if(e.target.id === 'resetBtn' && confirm('Ajouter à nouveau les séances d\'exemple ?')){
+    DEFAULTS.forEach(d => { if(!presets.some(p => p.id === d.id)) presets.push({...d}); });
+    savePresets(); renderHome(); alert('C\'est fait.');
+  }
+});
+
+/* ---------- Son, voix, vibration ---------- */
+let ac = null;
+function unlockAudio(){
+  try{
+    if(!ac){ const C = window.AudioContext || window.webkitAudioContext; if(C) ac = new C(); }
+    if(ac && ac.state === 'suspended') ac.resume();
+    if(ac){ const b = ac.createBuffer(1, 1, 22050), s = ac.createBufferSource(); s.buffer = b; s.connect(ac.destination); s.start(0); }
+  }catch(e){}
+  try{ if('speechSynthesis' in window && !unlockAudio.spoke){ const u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); unlockAudio.spoke = true; } }catch(e){}
+}
+function beep(freq, dur, vol = .5){
+  if(!settings.sound || !ac) return;
+  try{
+    const t = ac.currentTime, o = ac.createOscillator(), g = ac.createGain();
+    o.type = 'square'; o.frequency.value = freq;
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol * .35, t + .01);
+    g.gain.setValueAtTime(vol * .35, t + dur - .03); g.gain.linearRampToValueAtTime(0, t + dur);
+    o.connect(g).connect(ac.destination); o.start(t); o.stop(t + dur + .02);
+  }catch(e){}
+}
+let frVoice = null;
+function pickVoice(){ try{ const v = speechSynthesis.getVoices(); frVoice = v.find(x => /^fr[-_]FR/i.test(x.lang)) || v.find(x => /^fr/i.test(x.lang)) || null; }catch(e){} }
+if('speechSynthesis' in window){ pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+function say(text){
+  if(!settings.voice || !('speechSynthesis' in window)) return;
+  try{ speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text); u.lang = 'fr-FR'; if(frVoice) u.voice = frVoice; u.rate = 1.05; speechSynthesis.speak(u); }catch(e){}
+}
+const buzz = p => { if(settings.vibrate && navigator.vibrate) try{ navigator.vibrate(p); }catch(e){} };
+
+/* ---------- Écran allumé ---------- */
+let wakeLock = null;
+async function keepAwake(on){
+  try{
+    if(on && 'wakeLock' in navigator && !wakeLock){ wakeLock = await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release', () => wakeLock = null); }
+    if(!on && wakeLock){ await wakeLock.release(); wakeLock = null; }
+  }catch(e){}
+}
+document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible' && R && R.running) keepAwake(true); });
+
+/* ---------- Moteur du minuteur ---------- */
+let R = null; // état de la course
+function startRun(p){
+  unlockAudio();
+  const plan = buildPlan(p);
+  if(!plan.length) return;
+  R = {p, plan, idx:0, running:true, endAt:0, left:plan[0].dur * 1000, lastSec:null, locked:false, total:plan.reduce((a,x) => a + x.dur, 0)};
+  $('setBox').classList.toggle('hidden', p.sets <= 1);
+  $('run').classList.remove('locked');
+  show('run');
+  enterPhase(0, true);
+  keepAwake(true);
+  loop();
+}
+function enterPhase(i, announce){
+  R.idx = i;
+  const ph = R.plan[i];
+  R.left = ph.dur * 1000;
+  R.endAt = performance.now() + R.left;
+  R.lastSec = Math.ceil(R.left / 1000);
+  const run = $('run');
+  run.dataset.phase = ph.type;
+  run.classList.remove('flash'); void run.offsetWidth; run.classList.add('flash');
+  if(announce){
+    beep(ph.type === 'work' ? 1320 : 660, .45, .8);
+    buzz(ph.type === 'work' ? [250, 80, 250] : 400);
+    say(PHASE_VOICE[ph.type] + (ph.type === 'work' && R.p.rounds > 1 ? ', tour ' + ph.round : ''));
+  }
+  render();
+}
+function finish(){
+  R.running = false; R.done = true; R.left = 0;
+  $('run').dataset.phase = 'done';
+  beep(990, .25, .8); setTimeout(() => beep(1320, .25, .8), 300); setTimeout(() => beep(1760, .6, .8), 600);
+  buzz([300, 100, 300, 100, 600]);
+  say(PHASE_VOICE.done);
+  keepAwake(false);
+  render();
+}
+function tick(){
+  if(!R || !R.running) return;
+  const now = performance.now();
+  // rattrape plusieurs phases si l'appli était en arrière-plan
+  while(R.running && now >= R.endAt){
+    const over = now - R.endAt;
+    if(R.idx + 1 >= R.plan.length){ finish(); return; }
+    const silent = over > 1500;
+    enterPhase(R.idx + 1, !silent);
+    R.endAt -= Math.min(over, R.left); // garde le temps réel
+  }
+  R.left = R.endAt - now;
+  const sec = Math.ceil(R.left / 1000);
+  if(sec !== R.lastSec){
+    R.lastSec = sec;
+    if(sec > 0 && sec <= settings.beeps){ beep(880, .12, .6); if(sec <= 3) buzz(60); }
+  }
+  render();
+}
+function loop(){
+  clearInterval(loop.iv);
+  loop.iv = setInterval(tick, 100);
+  const raf = () => { if(!R || $('run').classList.contains('hidden')) return; tick(); requestAnimationFrame(raf); };
+  requestAnimationFrame(raf);
+}
+function render(){
+  if(!R) return;
+  const ph = R.plan[R.idx];
+  const done = !!R.done;
+  const sec = done ? 0 : Math.ceil(Math.max(0, R.left) / 1000);
+  $('rPhase').textContent = done ? PHASE_NAMES.done : PHASE_NAMES[ph.type];
+  $('rClock').textContent = done ? '0:00' : fmt(sec);
+  $('rRound').textContent = (done ? R.p.rounds : ph.round) + '/' + R.p.rounds;
+  $('rSet').textContent = (done ? R.p.sets : ph.set) + '/' + R.p.sets;
+  let after = 0; for(let i = R.idx + 1; i < R.plan.length; i++) after += R.plan[i].dur;
+  const leftAll = done ? 0 : after + Math.max(0, R.left) / 1000;
+  $('rLeft').textContent = fmt(Math.ceil(leftAll));
+  $('rElapsed').textContent = fmt(Math.floor(R.total - leftAll));
+  $('rProg').style.width = done ? '100%' : (100 * (1 - R.left / (ph.dur * 1000))).toFixed(2) + '%';
+  const nx = R.plan[R.idx + 1];
+  $('rNext').textContent = done ? 'Bravo !' : nx ? PHASE_NAMES[nx.type] : 'Fin';
+  $('rNextT').textContent = done || !nx ? '' : fmt(nx.dur);
+  $('pauseBtn').innerHTML = done ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>' : R.running ? ICON_PAUSE : ICON_PLAY;
+  $('pauseBtn').setAttribute('aria-label', done ? 'Recommencer' : R.running ? 'Pause' : 'Reprendre');
+  $('pausedTag').classList.toggle('hidden', R.running || done);
+  $('soundBtn').innerHTML = settings.sound
+    ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/></svg>'
+    : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4z"/><path d="M22 9l-6 6M16 9l6 6"/></svg>';
+  $('lockBtn').innerHTML = R.locked
+    ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>'
+    : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.5-2"/></svg>';
+}
+function togglePause(){
+  if(!R) return;
+  unlockAudio();
+  if(R.done){ startRun(R.p); return; }
+  if(R.running){ R.left = R.endAt - performance.now(); R.running = false; try{ speechSynthesis.cancel(); }catch(e){} }
+  else { R.endAt = performance.now() + R.left; R.running = true; keepAwake(true); }
+  render();
+}
+function jump(d){
+  if(!R || R.done) return;
+  const elapsedInPhase = R.plan[R.idx].dur * 1000 - R.left;
+  let i = R.idx + d;
+  if(d < 0 && elapsedInPhase > 2000) i = R.idx; // 1er appui : revient au début de la phase
+  if(i >= R.plan.length){ finish(); return; }
+  i = Math.max(0, i);
+  const wasRunning = R.running;
+  enterPhase(i, wasRunning);
+  if(!wasRunning){ R.running = false; render(); }
+}
+$('pauseBtn').onclick = togglePause;
+$('prevBtn').onclick = () => jump(-1);
+$('nextBtn').onclick = () => jump(1);
+$('tapArea').onclick = () => { if(R && !R.locked) togglePause(); };
+$('soundBtn').onclick = () => { settings.sound = !settings.sound; saveSettings(); unlockAudio(); render(); };
+$('lockBtn').onclick = () => { R.locked = !R.locked; $('run').classList.toggle('locked', R.locked); render(); };
+$('closeBtn').onclick = () => {
+  if(R && R.running && !confirm('Arrêter la séance ?')) return;
+  clearInterval(loop.iv); try{ speechSynthesis.cancel(); }catch(e){}
+  R = null; keepAwake(false); show('home');
+};
+document.addEventListener('keydown', e => {
+  if($('run').classList.contains('hidden')) return;
+  if(e.code === 'Space'){ e.preventDefault(); togglePause(); }
+  if(e.key === 'ArrowRight') jump(1);
+  if(e.key === 'ArrowLeft') jump(-1);
+});
+
+renderHome();
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>
+</body>
+</html>
