@@ -1,5 +1,5 @@
 // Cache hors ligne du minuteur. Changez VERSION après chaque mise à jour de index.html.
-const VERSION = 'minuteur-v1';
+const VERSION = 'minuteur-v2';
 const FILES = ['./', 'index.html', 'manifest.webmanifest', 'icon-180.png', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', e => {

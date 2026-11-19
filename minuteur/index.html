@@ -284,13 +284,13 @@ $('setBack').onclick = () => show('home');
 
 /* ---------- Éditeur ---------- */
 const FIELDS = [
-  {k:'prepare', label:'Préparation', hint:'Avant de commencer', type:'time', color:'--c-prepare', step:5, min:0},
-  {k:'work', label:'Effort', hint:'Durée de travail', type:'time', color:'--c-work', step:5, min:1},
-  {k:'rest', label:'Repos', hint:'Entre deux tours', type:'time', color:'--c-rest', step:5, min:0},
+  {k:'prepare', label:'Préparation', hint:'Avant de commencer', type:'time', color:'--c-prepare', step:1, min:0},
+  {k:'work', label:'Effort', hint:'Durée de travail', type:'time', color:'--c-work', step:1, min:1},
+  {k:'rest', label:'Repos', hint:'Entre deux tours', type:'time', color:'--c-rest', step:1, min:0},
   {k:'rounds', label:'Tours', hint:'Effort + repos', type:'count', step:1, min:1},
   {k:'sets', label:'Séries', hint:'Nombre de blocs de tours', type:'count', step:1, min:1},
-  {k:'setRest', label:'Repos entre séries', hint:'Après chaque série', type:'time', color:'--c-setrest', step:15, min:0},
-  {k:'cooldown', label:'Retour au calme', hint:'À la fin', type:'time', color:'--c-cool', step:15, min:0},
+  {k:'setRest', label:'Repos entre séries', hint:'Après chaque série', type:'time', color:'--c-setrest', step:1, min:0},
+  {k:'cooldown', label:'Retour au calme', hint:'À la fin', type:'time', color:'--c-cool', step:1, min:0},
 ];
 let draft = null, draftIsNew = false;
 function openEditor(p){
@@ -321,10 +321,12 @@ function refreshFields(){
   setRow.style.opacity = draft.sets > 1 ? 1 : .4;
   $('fTotal').textContent = fmt(totalOf(draft));
 }
-function bump(k, dir){
+function bump(k, dir, step){
   const f = FIELDS.find(x => x.k === k);
-  let v = draft[k] + dir * f.step;
-  if(f.type === 'time' && dir > 0 && draft[k] < f.step && draft[k] % f.step) v = f.step;
+  step = step || f.step;
+  let v = draft[k] + dir * step;
+  // en appui long, on s'aligne sur des valeurs rondes (5 s, 15 s)
+  if(step > 1) v = dir > 0 ? Math.floor(draft[k] / step) * step + step : Math.ceil(draft[k] / step) * step - step;
   draft[k] = Math.min(f.type === 'time' ? 5999 : 99, Math.max(f.min, v));
   refreshFields();
 }
@@ -335,8 +337,10 @@ $('fields').addEventListener('pointerdown', e => {
   e.preventDefault();
   const k = b.closest('.row').dataset.k, d = +b.dataset.d;
   bump(k, d);
-  let delay = 400;
-  const rep = () => { bump(k, d); delay = Math.max(60, delay * .8); holdT = setTimeout(rep, delay); };
+  let delay = 400, n = 0;
+  const isTime = FIELDS.find(x => x.k === k).type === 'time';
+  // appui long sur une durée : 1 s, puis 5 s, puis 15 s
+  const rep = () => { n++; bump(k, d, isTime ? (n > 30 ? 15 : n > 10 ? 5 : 1) : 1); delay = Math.max(60, delay * .8); holdT = setTimeout(rep, delay); };
   holdT = setTimeout(rep, delay);
 });
 ['pointerup','pointercancel','pointerleave'].forEach(ev => $('fields').addEventListener(ev, () => clearTimeout(holdT)));
